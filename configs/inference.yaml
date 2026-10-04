@@ -1,0 +1,5 @@
+inference:
+  latency_target_ms: 250
+  phenotyping:
+    height_precision_m: 0.03
+    leaf_count_margin: 1

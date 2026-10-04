@@ -1,0 +1,8 @@
+# RGB palette must be verified against MaizeField3D supplementary Table S1.
+num_points: 10000
+sampling: voxel
+voxel_size_normalized: 0.005
+seed: 42
+sor: false
+features: xyz
+classes: {0: leaf, 1: stalk}

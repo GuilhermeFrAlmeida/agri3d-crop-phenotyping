@@ -1,0 +1,10 @@
+model:
+  architecture: "PointNet2Seg"
+  input_shape: "N x 3"
+  classes:
+    0: "leaf"
+    1: "stalk"
+  training:
+    batch_size: 16
+    epochs: 100
+    learning_rate: 0.001
