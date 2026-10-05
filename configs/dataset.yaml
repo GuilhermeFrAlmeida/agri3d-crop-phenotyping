@@ -1,4 +1,5 @@
-# RGB palette must be verified against MaizeField3D supplementary Table S1.
+# Segmented MaizeField3D only: black=stalk(1), all non-black=leaf(0).
+annotation_mode: maizefield3d
 num_points: 10000
 sampling: voxel
 voxel_size_normalized: 0.005

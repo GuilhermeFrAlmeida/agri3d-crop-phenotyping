@@ -10,7 +10,7 @@ def main():
     args = parser.parse_args()
     root = Path(args.output).resolve(); root.mkdir(parents=True, exist_ok=True)
     archive = hf_hub_download(repo_id='BGLab/MaizeField3D', repo_type='dataset',
-        filename='FielGrwon_ZeaMays_SegmentedPCD_100k.zip', revision=args.revision)
+        filename='datasets/FielGrwon_ZeaMays_SegmentedPCD_100k.zip', revision=args.revision)
     with zipfile.ZipFile(archive) as z:
         for member in z.infolist():
             target = (root / member.filename).resolve()
