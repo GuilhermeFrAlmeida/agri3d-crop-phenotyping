@@ -5,16 +5,26 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from agri3d.io.ply import PLYReader
-from agri3d.preprocessing.labels import decode_labels
+from agri3d.preprocessing.labels import decode_labels, decode_maizefield3d_labels
 from agri3d.preprocessing.filtering import CloudFilter
 from agri3d.preprocessing.normalization import CloudNormalizer
 from agri3d.preprocessing.sampling import FixedSizeSampler
 from agri3d.training.splits import validate_manifest
 
 class SegmentationDataset(Dataset):
+    """XYZ-only segmentation samples; opt into MaizeField3D RGB supervision.
+
+    ``annotation_mode="maizefield3d"`` applies only to segmented exports.
+    Generic explicit mappings remain the default for other datasets.
+    """
     def __init__(self, manifest, root, split, num_points=10000, seed=42,
                  color_map=None, label_map=None, sampling='voxel', voxel_size=0.005,
-                 sor=False):
+                 sor=False, annotation_mode="explicit"):
+        if annotation_mode not in ("explicit", "maizefield3d"):
+            raise ValueError("Unknown annotation_mode")
+        if annotation_mode == "maizefield3d" and (color_map is not None or label_map is not None):
+            raise ValueError("MaizeField3D mode cannot be combined with explicit mappings")
+        self.annotation_mode = annotation_mode
         records = json.loads(Path(manifest).read_text()) if isinstance(manifest, (str, Path)) else manifest
         validate_manifest(records)
         if split not in ('train','val','test'):
@@ -46,7 +56,8 @@ class SegmentationDataset(Dataset):
         rng = np.random.default_rng(int.from_bytes(digest[:8], 'little'))
         pcd = PLYReader(self.root / r['path']).load_point_cloud()
         pcd = CloudFilter().remove_nan_inf(pcd)
-        pcd = decode_labels(pcd, self.color_map, self.label_map)
+        pcd = (decode_maizefield3d_labels(pcd) if self.annotation_mode == "maizefield3d"
+               else decode_labels(pcd, self.color_map, self.label_map))
         if self.sor:
             pcd = CloudFilter().statistical_outlier_removal(pcd)
         pcd = CloudNormalizer(scale_to_unit_sphere=True).process(pcd)
