@@ -41,3 +41,6 @@ Ready for baseline evaluation once verified grouping metadata is used to freeze 
 
 ### Follow-up repository validation
 `python -m pytest -q`: **42 passed, 1 skipped**. The unchanged multiprocess DataLoader test is skipped locally because Unix sockets needed for tensor transfer are prohibited; it remains enabled in CI. Added ASCII/binary RGB-only fixtures, rare/darkened-color decoding, malformed-RGB rejection, processing/index alignment, epoch/determinism/padding checks, mocked download path/revision/extraction checks, and real baseline execution on a synthetic RGB fixture. The 520-plant validation above was performed in the user's Colab session, not repeated in this workspace.
+
+## Phase 3 handoff update
+The user subsequently completed the plant-identity split (364 train / 78 validation / 78 test, seed 42) and the 10k sampled-point geometric validation run: mIoU 0.62299, leaf IoU 0.81734, stalk IoU 0.42864. The earlier manifest/baseline gates above are historical. Phase 3 reuses the externally supplied frozen manifest and does not evaluate test plants. See `phase3_pointnet2.md` for the neural implementation, mandatory real tiny-overfit gate and Colab workflow.

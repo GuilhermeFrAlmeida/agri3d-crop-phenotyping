@@ -33,7 +33,7 @@ class SegmentationDataset(Dataset):
         if not self.records:
             raise ValueError("Requested split is empty")
         self.root = Path(root).resolve()
-        for r in records:
+        for r in self.records:
             path = (self.root / r['path']).resolve()
             if not path.is_relative_to(self.root) or not path.is_file():
                 raise ValueError("Manifest path missing or outside data root")
