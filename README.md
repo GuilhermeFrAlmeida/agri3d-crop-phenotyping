@@ -1,5 +1,7 @@
 # Agri3D crop phenotyping
-Phase 2 geometry baseline and Phase 3 data foundation. PointNet++ is intentionally not implemented.
+Phase 2 geometry baseline and Phase 3 XYZ-only PointNet++ semantic segmentation.
+
+See [the Phase 3 workflow](docs/phase3_pointnet2.md) for installation, mandatory tiny-overfit, training, validation, checkpoint/resume contracts and known limitations.
 
 ## Setup
 ```bash
@@ -67,4 +69,15 @@ Revision pinning and archive path validation remain enforced.
 
 User-reported Colab validation passed for all 520 annotated plants: 100k points each, finite coordinates, Z vertical, meter-consistent scale, and both black/non-black annotations. Black-point ratio: mean ≈0.2263, median ≈0.2181, range ≈0.0925–0.3939. Ingestion, preprocessing, normalization, sampling and Dataset/DataLoader integration passed. `num_workers=0` is the verified Colab setting; the interactive temporary-subclass spawn failure does not establish a repository defect. Use the repository Dataset directly.
 
-The code is ready for group-aware manifest creation and real baseline evaluation. Remaining input: verified grouping metadata and a frozen manifest; no final split or real baseline score is claimed here. Preserve dataset revision, code commit, sample count and manifest alongside Colab results.
+The user has now frozen the plant-identity split (364/78/78, seed 42) and completed the 10k-point geometric validation baseline. Reuse that existing manifest unchanged for Phase 3. Preserve dataset revision, code commit, sample count and manifest alongside Colab results.
+
+## Phase 3: PointNet++
+The pure-PyTorch SSG network accepts float32 `(B,N,3)` XYZ and returns `(B,N,2)` logits. Training uses unweighted masked cross-entropy and Adam. Default input is 10k points, batch size 2, no SOR and no augmentation. RGB only supplies labels.
+
+1. Install: `python -m pip install -e '.[dev,geometry]'` and run `python -m pytest -q`.
+2. Run `scripts/train_pointnet2.py --overfit-samples 4` on the existing frozen manifest. The [workflow](docs/phase3_pointnet2.md) gives complete Colab commands.
+3. Inspect `train_eval` in `metrics.json`. A passing eval-mode training check writes `overfit_passed.pt`; regular training requires it via `--overfit-checkpoint`.
+4. Train on the 364 training plants; choose `best.pt` by validation mIoU on the 78 validation plants. No test-evaluation path is provided.
+5. Use `scripts/validate_pointnet2.py` to reproduce sampled-point validation from a regular-run checkpoint.
+
+User-reported frozen validation geometric baseline: mIoU **0.623**, leaf IoU **0.817**, stalk IoU **0.429**. Initial neural engineering targets: mIoU >0.70, stalk IoU >0.55, leaf IoU approximately >=0.82. These are targets, not measured neural results. Preserve plant grouping, seed 42, and the 364/78/78 frozen split; the training code does not generate splits.
