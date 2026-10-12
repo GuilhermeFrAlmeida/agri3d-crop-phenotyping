@@ -85,3 +85,7 @@ User-reported frozen validation geometric baseline: mIoU **0.623**, leaf IoU **0
 ### Phase 3A — validation diagnosis
 
 Use `scripts/analyze_pointnet2.py` with Run 1's `best.pt` and the unchanged frozen manifest to produce per-plant metrics, metadata-conditioned summaries, and optional interactive GT/prediction/error views. The analysis only loads validation plants and does not train or change the model. Install optional dependencies with `pip install -e '.[analysis]'`. See [the Colab analysis command and artifact contract](docs/phase3a_validation_analysis.md).
+
+### Phase 3B — controlled augmentation Run 2
+
+`configs/pointnet2_run2_aug.yaml` changes only training augmentation: Z rotation, scale [0.95, 1.05], and normalized-coordinate jitter σ=0.005 clipped to ±0.02. Validation stays fixed and unaugmented. Run 2 can reuse the existing unaugmented tiny-overfit gate and writes separate `artifacts/pointnet2_run2_aug` outputs. See [the Run 2 Colab commands, compatibility contract, and comparison template](docs/phase3b_run2_augmentation.md).

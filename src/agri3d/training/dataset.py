@@ -9,6 +9,7 @@ from agri3d.preprocessing.labels import decode_labels, decode_maizefield3d_label
 from agri3d.preprocessing.filtering import CloudFilter
 from agri3d.preprocessing.normalization import CloudNormalizer
 from agri3d.preprocessing.sampling import FixedSizeSampler
+from agri3d.preprocessing.augmentation import AugmentationConfig, augment_cloud
 from agri3d.training.splits import validate_manifest
 
 class SegmentationDataset(Dataset):
@@ -16,14 +17,20 @@ class SegmentationDataset(Dataset):
 
     ``annotation_mode="maizefield3d"`` applies only to segmented exports.
     Generic explicit mappings remain the default for other datasets.
+    Optional training augmentation follows sampling and uses the same per-sample RNG.
+    Centroid/scale metadata describes pre-augmentation normalization. Validation
+    ignores augmentation and retains the original fixed-point contract.
     """
     def __init__(self, manifest, root, split, num_points=10000, seed=42,
                  color_map=None, label_map=None, sampling='voxel', voxel_size=0.005,
-                 sor=False, annotation_mode="explicit"):
+                 sor=False, annotation_mode="explicit", augmentation=None):
         if annotation_mode not in ("explicit", "maizefield3d"):
             raise ValueError("Unknown annotation_mode")
         if annotation_mode == "maizefield3d" and (color_map is not None or label_map is not None):
             raise ValueError("MaizeField3D mode cannot be combined with explicit mappings")
+        self.augmentation = AugmentationConfig.from_settings(augmentation)
+        if split == "test" and self.augmentation.enabled:
+            raise ValueError("Training augmentation is not permitted for test datasets")
         self.annotation_mode = annotation_mode
         records = json.loads(Path(manifest).read_text()) if isinstance(manifest, (str, Path)) else manifest
         validate_manifest(records)
@@ -62,6 +69,8 @@ class SegmentationDataset(Dataset):
             pcd = CloudFilter().statistical_outlier_removal(pcd)
         pcd = CloudNormalizer(scale_to_unit_sphere=True).process(pcd)
         pcd = self.sampler.sample(pcd, rng)
+        if self.split == "train" and self.augmentation.enabled:
+            pcd = augment_cloud(pcd, rng, self.augmentation)
         return {'points': torch.from_numpy(pcd.xyz),
                 'labels': torch.from_numpy(pcd.attributes['label']),
                 'valid_mask': torch.from_numpy(pcd.attributes['valid_mask']),

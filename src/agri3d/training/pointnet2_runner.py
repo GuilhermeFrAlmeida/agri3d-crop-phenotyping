@@ -13,6 +13,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 
 from agri3d.models import PointNet2Config, PointNet2Segmentation
+from agri3d.preprocessing.augmentation import AugmentationConfig
 
 from .checkpoints import (
     capture_rng,
@@ -37,6 +38,7 @@ class RunConfig:
     device: str = "auto"
     overfit_samples: int = 0
     model: dict = field(default_factory=dict)
+    augmentation: dict = field(default_factory=dict)
 
     def validate(self):
         if any(
@@ -60,6 +62,11 @@ class RunConfig:
         if not 0 <= self.seed < 2**32:
             raise ValueError("Invalid seed")
         PointNet2Config(**self.model)
+        augmentation = AugmentationConfig.from_settings(self.augmentation)
+        if self.overfit_samples and augmentation.enabled:
+            raise ValueError(
+                "Tiny-overfit requires disabled augmentation; use the Run 1 configuration"
+            )
 
 
 def select_device(name: str) -> torch.device:
@@ -102,7 +109,9 @@ def experiment_contract(config: RunConfig, manifest_hash: str) -> dict:
         "sampling": "voxel",
         "voxel_size_normalized": 0.005,
         "sor": False,
-        "augmentation": None,
+        "augmentation": AugmentationConfig.from_settings(
+            config.augmentation
+        ).contract(),
     }
 
 
@@ -117,6 +126,7 @@ def make_dataset(records: list[dict], root: str | Path, split: str, config: RunC
         seed=config.seed,
         annotation_mode="maizefield3d",
         sor=False,
+        augmentation=config.augmentation,
     )
 
 
@@ -164,8 +174,33 @@ def verify_overfit_gate(checkpoint: dict, contract: dict) -> None:
         "overfit_status", {}
     ).get("passed"):
         raise ValueError("Regular training requires a passing tiny-overfit checkpoint")
-    if checkpoint.get("contract") != contract:
-        raise ValueError("Overfit checkpoint data/model contract differs from this run")
+    # Only this gate permits an augmentation difference. The gate itself must
+    # remain unaugmented and match every other data/model/optimizer invariant.
+    expected = {**contract, "augmentation": None}
+    verify_checkpoint_contract(
+        checkpoint,
+        expected,
+        "Overfit checkpoint data/model contract differs from this run",
+    )
+
+
+def contract_sha256(contract: dict) -> str:
+    return hashlib.sha256(
+        json.dumps(
+            contract, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ).encode()
+    ).hexdigest()
+
+
+def verify_checkpoint_contract(checkpoint: dict, expected: dict, message: str) -> None:
+    if checkpoint.get("contract") != expected:
+        raise ValueError(message)
+    saved_hash = checkpoint.get("contract_sha256")
+    # Historical unaugmented checkpoints predate the hash. Run 2 requires it.
+    if saved_hash is None and expected.get("augmentation") is None:
+        return
+    if saved_hash != contract_sha256(expected):
+        raise ValueError("Checkpoint contract SHA256 is missing or inconsistent")
 
 
 def environment(device: torch.device) -> dict:
@@ -205,7 +240,10 @@ def train(
     resumed = load_checkpoint(resume) if resume else None
     gate_evidence = None
     if resumed:
-        if resumed.get("contract") != contract or resumed.get("mode") != mode:
+        verify_checkpoint_contract(
+            resumed, contract, "Resume checkpoint data/model/mode contract differs"
+        )
+        if resumed.get("mode") != mode:
             raise ValueError("Resume checkpoint data/model/mode contract differs")
         old_config = resumed["config"]
         for key in ("batch_size", "lr", "num_workers", "overfit_samples"):
@@ -229,6 +267,8 @@ def train(
             ).hexdigest(),
             "overfit_status": gate["overfit_status"],
             "sample_ids": gate["train_sample_ids"],
+            "contract": gate["contract"],
+            "contract_sha256": contract_sha256(gate["contract"]),
         }
 
     output = Path(output_dir)
@@ -280,6 +320,7 @@ def train(
     run_info = {
         "config": asdict(config),
         "contract": contract,
+        "contract_sha256": contract_sha256(contract),
         "mode": mode,
         "train_sample_ids": train_ids,
         "initial_metrics": initial_metrics,
@@ -372,8 +413,11 @@ def validate_checkpoint(
     config.validate()
     seed_everything(config.seed)
     records, manifest_hash = read_manifest(manifest)
-    if experiment_contract(config, manifest_hash) != checkpoint["contract"]:
-        raise ValueError("Validation manifest differs from checkpoint contract")
+    verify_checkpoint_contract(
+        checkpoint,
+        experiment_contract(config, manifest_hash),
+        "Validation manifest differs from checkpoint contract",
+    )
     device = select_device(device_name)
     dataset = make_dataset(records, root, "val", config)
     loader = make_loader(
