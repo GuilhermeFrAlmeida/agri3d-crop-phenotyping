@@ -171,3 +171,7 @@ The implementation is ready for `pull commit → tests → real tiny-overfit →
 - New Python modules pass lint; Python compilation and editable installation passed.
 - Review confirmed unweighted masked loss, no annotation features, no test-file access by the new runner, manifest hash checks, validation-only model selection, and bounded query dimensions. No known code blocker remains for the Colab sequence.
 - Real MaizeField3D neural training and CUDA benchmarking have **not** been run here. The real tiny-overfit and CUDA/VRAM checks remain mandatory before the first regular run. The sparse-cloud/BatchNorm and padded-context limitations above remain relevant.
+
+## Phase 3A: diagnose Run 1 validation errors
+
+Run 1's user-reported best epoch 76 achieved validation mIoU 0.8366027, leaf IoU 0.9202424, and stalk IoU 0.7529630. Before changing model/training choices, run the validation-only [Phase 3A analysis workflow](phase3a_validation_analysis.md). It adds per-plant metrics, exact Tagname metadata joins, descriptive associations, and optional comparable GT/prediction/error views. The existing validator and checkpoint semantics remain unchanged; test remains excluded.

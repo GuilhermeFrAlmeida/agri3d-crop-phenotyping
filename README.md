@@ -81,3 +81,7 @@ The pure-PyTorch SSG network accepts float32 `(B,N,3)` XYZ and returns `(B,N,2)`
 5. Use `scripts/validate_pointnet2.py` to reproduce sampled-point validation from a regular-run checkpoint.
 
 User-reported frozen validation geometric baseline: mIoU **0.623**, leaf IoU **0.817**, stalk IoU **0.429**. Initial neural engineering targets: mIoU >0.70, stalk IoU >0.55, leaf IoU approximately >=0.82. These are targets, not measured neural results. Preserve plant grouping, seed 42, and the 364/78/78 frozen split; the training code does not generate splits.
+
+### Phase 3A — validation diagnosis
+
+Use `scripts/analyze_pointnet2.py` with Run 1's `best.pt` and the unchanged frozen manifest to produce per-plant metrics, metadata-conditioned summaries, and optional interactive GT/prediction/error views. The analysis only loads validation plants and does not train or change the model. Install optional dependencies with `pip install -e '.[analysis]'`. See [the Colab analysis command and artifact contract](docs/phase3a_validation_analysis.md).
