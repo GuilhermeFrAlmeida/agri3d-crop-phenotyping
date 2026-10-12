@@ -20,6 +20,7 @@ from agri3d.training.pointnet2_runner import (
     make_loader,
     read_manifest,
     select_device,
+    verify_checkpoint_contract,
     write_json,
 )
 
@@ -134,8 +135,11 @@ def analyze_checkpoint(
     config.validate()
     seed_everything(config.seed)
     records, manifest_hash = read_manifest(manifest)
-    if experiment_contract(config, manifest_hash) != checkpoint["contract"]:
-        raise ValueError("Analysis manifest/config differs from checkpoint contract")
+    verify_checkpoint_contract(
+        checkpoint,
+        experiment_contract(config, manifest_hash),
+        "Analysis manifest/config differs from checkpoint contract",
+    )
     device = select_device(device_name)
     dataset = make_dataset(records, root, "val", config)
     # Preflight exact join/dependencies before inference. Never check train/test paths.

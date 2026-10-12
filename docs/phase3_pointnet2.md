@@ -175,3 +175,7 @@ The implementation is ready for `pull commit → tests → real tiny-overfit →
 ## Phase 3A: diagnose Run 1 validation errors
 
 Run 1's user-reported best epoch 76 achieved validation mIoU 0.8366027, leaf IoU 0.9202424, and stalk IoU 0.7529630. Before changing model/training choices, run the validation-only [Phase 3A analysis workflow](phase3a_validation_analysis.md). It adds per-plant metrics, exact Tagname metadata joins, descriptive associations, and optional comparable GT/prediction/error views. The existing validator and checkpoint semantics remain unchanged; test remains excluded.
+
+## Phase 3B: one controlled augmentation experiment
+
+Use [the Run 2 workflow](phase3b_run2_augmentation.md) and `configs/pointnet2_run2_aug.yaml` to add training-only Z rotation, mild isotropic scale jitter, and clipped coordinate jitter after normalization/sampling. All other Run 1 experiment settings remain fixed. Legacy unaugmented checkpoints and the existing passing tiny-overfit gate remain compatible; augmentation is recorded/hashed and must match on resume. Validation/Phase 3A analysis remain unaugmented. Test remains excluded.

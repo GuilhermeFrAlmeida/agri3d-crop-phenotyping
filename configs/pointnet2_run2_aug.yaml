@@ -1,0 +1,21 @@
+# Run 2: identical to Run 1 except mild training-only XYZ augmentation.
+points: 10000
+epochs: 100
+batch_size: 2
+lr: 0.001
+seed: 42
+num_workers: 0
+device: auto
+overfit_samples: 0
+model:
+  npoints: [1024, 256, 64, 16]
+  radii: [0.1, 0.2, 0.4, 0.8]
+  nsamples: [32, 32, 32, 32]
+  chunk_size: 128
+augmentation:
+  enabled: true
+  rotate_z: true
+  scale_min: 0.95
+  scale_max: 1.05
+  jitter_sigma: 0.005
+  jitter_clip: 0.02
