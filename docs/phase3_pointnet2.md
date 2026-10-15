@@ -179,3 +179,7 @@ Run 1's user-reported best epoch 76 achieved validation mIoU 0.8366027, leaf IoU
 ## Phase 3B: one controlled augmentation experiment
 
 Use [the Run 2 workflow](phase3b_run2_augmentation.md) and `configs/pointnet2_run2_aug.yaml` to add training-only Z rotation, mild isotropic scale jitter, and clipped coordinate jitter after normalization/sampling. All other Run 1 experiment settings remain fixed. Legacy unaugmented checkpoints and the existing passing tiny-overfit gate remain compatible; augmentation is recorded/hashed and must match on resume. Validation/Phase 3A analysis remain unaugmented. Test remains excluded.
+
+## Phase 3P: recovery and training performance
+
+[Phase 3P](phase3p_training_performance.md) adds dataset-free checkpoint inspection, short train/val torch/Nsight profiling, opt-in detailed timing/VRAM telemetry, loader benchmarks, and a provenance-checked local normalized-cloud cache. The Run 2 YAML/scientific contract and default recovery behavior remain unchanged. It includes the exact interrupted-Run-2 continuation command and CPU-only findings; no Colab GPU speedup is claimed.

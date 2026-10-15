@@ -9,6 +9,8 @@ import math
 import torch
 from torch import Tensor
 
+from agri3d.performance.ranges import profile_range
+
 
 def check_xyz(xyz: Tensor, name: str = "xyz") -> None:
     if xyz.ndim != 3 or xyz.shape[-1] != 3 or min(xyz.shape[:2]) < 1:
@@ -26,6 +28,7 @@ def check_pair(source: Tensor, target: Tensor) -> None:
         raise ValueError("Point sets must have the same device and dtype")
 
 
+@profile_range("agri3d::square_distance")
 def square_distance(source: Tensor, target: Tensor) -> Tensor:
     """Squared Euclidean distances, (B, S, 3) x (B, N, 3) -> (B, S, N).
 
@@ -39,6 +42,7 @@ def square_distance(source: Tensor, target: Tensor) -> Tensor:
     ).clamp_min(0)
 
 
+@profile_range("agri3d::index_points")
 def index_points(points: Tensor, indices: Tensor) -> Tensor:
     """Gather (B, N, C) with (B, ...) int64 indices -> (B, ..., C)."""
     if points.ndim != 3 or min(points.shape) < 1:
@@ -61,6 +65,7 @@ def index_points(points: Tensor, indices: Tensor) -> Tensor:
 
 
 @torch.no_grad()
+@profile_range("agri3d::fps")
 def farthest_point_sample(xyz: Tensor, npoint: int) -> Tensor:
     """Deterministic unique-index FPS, starting farthest from the cloud centroid.
 
@@ -90,6 +95,7 @@ def farthest_point_sample(xyz: Tensor, npoint: int) -> Tensor:
 
 
 @torch.no_grad()
+@profile_range("agri3d::radius_query")
 def query_ball_point(
     radius: float, nsample: int, xyz: Tensor, centers: Tensor, chunk_size: int = 128
 ) -> Tensor:
@@ -115,6 +121,7 @@ def query_ball_point(
     return torch.cat(chunks, dim=1)
 
 
+@profile_range("agri3d::grouping")
 def sample_and_group(
     npoint: int,
     radius: float,
@@ -139,6 +146,7 @@ def sample_and_group(
     return centers, grouped
 
 
+@profile_range("agri3d::interpolation")
 def interpolate_features(
     dense_xyz: Tensor,
     sparse_xyz: Tensor,
