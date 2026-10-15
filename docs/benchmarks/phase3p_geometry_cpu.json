@@ -1,0 +1,72 @@
+{
+  "scope": "Synthetic isolated geometry wall timings; not Colab speedup or end-to-end model performance",
+  "batch_size": 2,
+  "input_points": 10000,
+  "centroids": 1024,
+  "warmup": 1,
+  "repeats": 3,
+  "units": "ms",
+  "torch_threads": 1,
+  "environment": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cpu",
+    "numpy": "2.3.5",
+    "device": "cpu",
+    "code_commit": "unknown (not a git checkout)",
+    "gpu": null
+  },
+  "telemetry": {
+    "cuda_available": false,
+    "device": "cpu",
+    "gpu": null,
+    "allocated_bytes": null,
+    "reserved_bytes": null,
+    "peak_allocated_bytes": null,
+    "peak_reserved_bytes": null
+  },
+  "results": {
+    "fps": {
+      "count": 3,
+      "mean": 261.22668966665213,
+      "median": 255.11632799998551,
+      "p95": 279.5243756999639,
+      "total": 783.6800689999563
+    },
+    "square_distance_chunk128": {
+      "count": 3,
+      "mean": 11.604278333303833,
+      "median": 11.534312999970098,
+      "p95": 12.003316499942684,
+      "total": 34.8128349999115
+    },
+    "topk_chunk128": {
+      "count": 3,
+      "mean": 7.364899666640667,
+      "median": 7.371762999923703,
+      "p95": 7.632589299976189,
+      "total": 22.094698999922002
+    },
+    "index_points_centroids": {
+      "count": 3,
+      "mean": 0.03410133335061497,
+      "median": 0.03521299993280991,
+      "p95": 0.03709670006628585,
+      "total": 0.10230400005184492
+    },
+    "radius_query_all_centroids": {
+      "count": 3,
+      "mean": 148.12900900002055,
+      "median": 146.84934499996416,
+      "p95": 152.74285370003327,
+      "total": 444.3870270000616
+    },
+    "interpolation_to_input": {
+      "count": 3,
+      "mean": 93.05965666665846,
+      "median": 92.32482000004438,
+      "p95": 94.48815900000227,
+      "total": 279.1789699999754
+    }
+  },
+  "cost": "FPS O(B*N*S), O(B*N) work memory; radius distance O(B*N*S), chunk128 O(B*128*N); 3NN interpolation O(B*N*S) chunked"
+}

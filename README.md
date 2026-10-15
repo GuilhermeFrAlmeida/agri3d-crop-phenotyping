@@ -89,3 +89,7 @@ Use `scripts/analyze_pointnet2.py` with Run 1's `best.pt` and the unchanged froz
 ### Phase 3B — controlled augmentation Run 2
 
 `configs/pointnet2_run2_aug.yaml` changes only training augmentation: Z rotation, scale [0.95, 1.05], and normalized-coordinate jitter σ=0.005 clipped to ±0.02. Validation stays fixed and unaugmented. Run 2 can reuse the existing unaugmented tiny-overfit gate and writes separate `artifacts/pointnet2_run2_aug` outputs. See [the Run 2 Colab commands, compatibility contract, and comparison template](docs/phase3b_run2_augmentation.md).
+
+### Phase 3P — checkpoint recovery and performance
+
+Inspect `last.pt` without loading plants using `scripts/inspect_pointnet2_checkpoint.py`. Use bounded train/val workloads in `scripts/profile_pointnet2.py`, optional `scripts/nsys_pointnet2.py`, and loader/cache/geometry benchmark CLIs before choosing infrastructure options. Existing Run 2 defaults and scientific settings remain unchanged. See [the exact recovery command, Colab profiling commands, measured CPU findings, and limitations](docs/phase3p_training_performance.md).

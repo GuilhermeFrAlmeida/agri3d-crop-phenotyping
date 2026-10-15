@@ -10,9 +10,11 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import Subset
 
 from agri3d.models import PointNet2Config, PointNet2Segmentation
+from agri3d.performance.runtime import RuntimeOptions, build_loader
+from agri3d.performance.timing import telemetry
 from agri3d.preprocessing.augmentation import AugmentationConfig
 
 from .checkpoints import (
@@ -115,9 +117,12 @@ def experiment_contract(config: RunConfig, manifest_hash: str) -> dict:
     }
 
 
-def make_dataset(records: list[dict], root: str | Path, split: str, config: RunConfig):
+def make_dataset(
+    records: list[dict], root: str | Path, split: str, config: RunConfig, runtime=None
+):
     if split not in ("train", "val"):
         raise ValueError("Phase 3 development permits train/val only")
+    runtime = runtime or RuntimeOptions()
     return SegmentationDataset(
         records,
         root,
@@ -127,21 +132,15 @@ def make_dataset(records: list[dict], root: str | Path, split: str, config: RunC
         annotation_mode="maizefield3d",
         sor=False,
         augmentation=config.augmentation,
+        cache_dir=runtime.cache_dir,
+        profile_data=runtime.detailed_timing,
     )
 
 
-def make_loader(dataset, config: RunConfig, shuffle: bool, generator: torch.Generator):
-    # Workers are recreated per iterator so the Dataset's set_epoch is propagated.
-    return DataLoader(
-        dataset,
-        batch_size=config.batch_size,
-        shuffle=shuffle,
-        num_workers=config.num_workers,
-        persistent_workers=False,
-        generator=generator,
-        drop_last=False,
-        **({"multiprocessing_context": "spawn"} if config.num_workers else {}),
-    )
+def make_loader(
+    dataset, config: RunConfig, shuffle: bool, generator: torch.Generator, runtime=None
+):
+    return build_loader(dataset, config, shuffle, generator, runtime)
 
 
 def choose_overfit_indices(dataset, count: int, seed: int) -> list[int]:
@@ -230,8 +229,11 @@ def train(
     config: RunConfig,
     resume: str | None = None,
     overfit_checkpoint: str | None = None,
+    runtime: RuntimeOptions | None = None,
 ) -> dict:
     config.validate()
+    runtime = runtime or RuntimeOptions()
+    runtime.validate(config.num_workers)
     seed_everything(config.seed)
     device = select_device(config.device)
     records, manifest_hash = read_manifest(manifest)
@@ -280,7 +282,7 @@ def train(
         raise ValueError("Resume from output-dir/last.pt to preserve one run history")
     output.mkdir(parents=True, exist_ok=True)
 
-    training = make_dataset(records, root, "train", config)
+    training = make_dataset(records, root, "train", config, runtime)
     train_view = training
     if config.overfit_samples:
         train_view = Subset(
@@ -293,13 +295,19 @@ def train(
         else [r["sample_id"] for r in training.records]
     )
     validation = (
-        make_dataset(records, root, "val", config) if mode == "regular" else None
+        make_dataset(records, root, "val", config, runtime)
+        if mode == "regular"
+        else None
     )
     shuffle_rng = torch.Generator().manual_seed(config.seed)
     eval_rng = torch.Generator().manual_seed(config.seed + 1)
-    train_loader = make_loader(train_view, config, True, shuffle_rng)
+    train_loader = make_loader(train_view, config, True, shuffle_rng, runtime)
     eval_loader = make_loader(
-        train_view if validation is None else validation, config, False, eval_rng
+        train_view if validation is None else validation,
+        config,
+        False,
+        eval_rng,
+        runtime,
     )
     model = PointNet2Segmentation(PointNet2Config(**config.model)).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
@@ -316,9 +324,16 @@ def train(
         restore_rng(resumed["rng"])
     elif mode == "tiny_overfit":
         training.set_epoch(0)
-        initial_metrics = run_epoch(model, eval_loader, device)
+        initial_metrics = run_epoch(
+            model,
+            eval_loader,
+            device,
+            non_blocking=runtime.non_blocking,
+            detailed_timing=runtime.detailed_timing,
+        )
     run_info = {
         "config": asdict(config),
+        "runtime": asdict(runtime),
         "contract": contract,
         "contract_sha256": contract_sha256(contract),
         "mode": mode,
@@ -335,9 +350,22 @@ def train(
     write_json(output / "run.json", run_info)
     for epoch in range(start_epoch, config.epochs):
         training.set_epoch(0 if mode == "tiny_overfit" else epoch)
-        train_metrics = run_epoch(model, train_loader, device, optimizer)
+        train_metrics = run_epoch(
+            model,
+            train_loader,
+            device,
+            optimizer,
+            non_blocking=runtime.non_blocking,
+            detailed_timing=runtime.detailed_timing,
+        )
         # Tiny-overfit is scored after updates in eval mode, on the same fixed train points.
-        selected_metrics = run_epoch(model, eval_loader, device)
+        selected_metrics = run_epoch(
+            model,
+            eval_loader,
+            device,
+            non_blocking=runtime.non_blocking,
+            detailed_timing=runtime.detailed_timing,
+        )
         status = (
             overfit_status(initial_metrics["loss"], selected_metrics)
             if initial_metrics
@@ -355,6 +383,8 @@ def train(
             "train_eval" if mode == "tiny_overfit" else "val": selected_metrics,
             "overfit_status": status,
         }
+        if runtime.telemetry:
+            record["telemetry"] = telemetry(device)
         history.append(record)
         payload = {
             **run_info,

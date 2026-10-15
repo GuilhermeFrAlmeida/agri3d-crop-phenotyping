@@ -1,0 +1,18 @@
+# Documentation placeholders only; NOT a RunConfig or training CLI input.
+# Any enabled setting below requires a separately defined future experiment.
+# Phase 3P does not implement/enable early stopping or these optimizations.
+batch_size: 2
+larger_batch_sizes:
+  enabled: false
+  candidates: [4, 8]
+amp:
+  enabled: false
+tf32:
+  enabled: false
+optimized_pointnet2_ops:
+  enabled: false
+early_stopping:
+  enabled: false
+  metric: val_mIoU
+  patience: 15
+  min_delta: 0.0005

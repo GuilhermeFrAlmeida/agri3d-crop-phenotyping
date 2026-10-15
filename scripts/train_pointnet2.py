@@ -6,6 +6,7 @@ from pathlib import Path
 
 import yaml
 
+from agri3d.performance.runtime import add_runtime_arguments, runtime_from_args
 from agri3d.training.pointnet2_runner import RunConfig, train
 
 
@@ -35,6 +36,7 @@ def main():
         "--overfit-checkpoint",
         help="Passing tiny-overfit checkpoint required for a new regular run",
     )
+    add_runtime_arguments(parser)
     args = parser.parse_args()
     settings = yaml.safe_load(Path(args.config).read_text()) if args.config else {}
     if not isinstance(settings, dict):
@@ -54,6 +56,7 @@ def main():
             RunConfig(**settings),
             resume=args.resume,
             overfit_checkpoint=args.overfit_checkpoint,
+            runtime=runtime_from_args(args),
         )
     except (ValueError, TypeError) as exc:
         parser.error(str(exc))
