@@ -26,6 +26,11 @@ def main():
     parser.add_argument("--prefetch-factor", type=int)
     parser.add_argument("--persistent-workers", action="store_true")
     parser.add_argument("--non-blocking", action="store_true")
+    parser.add_argument(
+        "--matrix",
+        action="store_true",
+        help="Compare transfer off/on and persistent workers off/on",
+    )
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()
     cfg = RunConfig(**yaml.safe_load(Path(args.config).read_text()))
@@ -46,6 +51,7 @@ def main():
         args.prefetch_factor,
         args.persistent_workers,
         args.non_blocking,
+        args.matrix,
     )
     print(
         json.dumps(

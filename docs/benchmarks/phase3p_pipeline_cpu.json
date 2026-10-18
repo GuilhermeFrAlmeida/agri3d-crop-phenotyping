@@ -1,0 +1,1241 @@
+{
+  "scope": "Synthetic CPU only; 100k binary PLY clouds for loader/cache, reduced 256-point model profile. No real MaizeField3D, Colab/T4 measurement, or scientific training result. OS cache uncontrolled. One run, no speedup recommendation.",
+  "torch_threads": 1,
+  "loader_cache": {
+    "split": "train",
+    "manifest_sha256": "a9634e06b798bfe6dfd7c8dfdbc5e7863193c68d1c35bb83fe9d1a1e4e89cf75",
+    "config": {
+      "points": 10000,
+      "epochs": 100,
+      "batch_size": 2,
+      "lr": 0.001,
+      "seed": 42,
+      "num_workers": 0,
+      "device": "cpu",
+      "overfit_samples": 0,
+      "model": {},
+      "augmentation": {},
+      "scheduler": {}
+    },
+    "contract": {
+      "manifest_sha256": "a9634e06b798bfe6dfd7c8dfdbc5e7863193c68d1c35bb83fe9d1a1e4e89cf75",
+      "points": 10000,
+      "seed": 42,
+      "batch_size": 2,
+      "optimizer": {
+        "name": "Adam",
+        "lr": 0.001
+      },
+      "model": {
+        "npoints": [
+          1024,
+          256,
+          64,
+          16
+        ],
+        "radii": [
+          0.1,
+          0.2,
+          0.4,
+          0.8
+        ],
+        "nsamples": [
+          32,
+          32,
+          32,
+          32
+        ],
+        "chunk_size": 128
+      },
+      "annotation_mode": "maizefield3d",
+      "features": "xyz",
+      "classes": {
+        "0": "leaf",
+        "1": "stalk"
+      },
+      "sampling": "voxel",
+      "voxel_size_normalized": 0.005,
+      "sor": false,
+      "augmentation": null
+    },
+    "warmup_batches": 0,
+    "measured_batches_per_pass": 3,
+    "environment": {
+      "python": "3.12.14",
+      "torch": "2.14.1+cu130",
+      "numpy": "2.3.5",
+      "device": "cpu",
+      "code_commit": "source snapshot on main after Phase 3C plus Phase 3P throughput changes",
+      "gpu": null
+    },
+    "telemetry": {
+      "cuda_available": false,
+      "device": "cpu",
+      "gpu": null,
+      "allocated_bytes": null,
+      "reserved_bytes": null,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    "results": [
+      {
+        "num_workers": 0,
+        "mode": "uncached",
+        "runtime": {
+          "pin_memory": false,
+          "prefetch_factor": null,
+          "persistent_workers": false,
+          "non_blocking": false,
+          "cache_dir": null,
+          "detailed_timing": true,
+          "telemetry": false
+        },
+        "status": "ok",
+        "passes": [
+          {
+            "pass": 1,
+            "iterator_startup_ms": 0.5256859999462904,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 8.05186274577231,
+              "stage_percent_of_batch": {
+                "data_wait": 99.98217975154606,
+                "h2d": 0.006551934858669024
+              },
+              "unattributed_percent": 0.011268313595263169,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.001649333360849899,
+                  "median": 0.0016130001085912227,
+                  "p95": 0.0017164999349006393,
+                  "total": 0.004948000082549697
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 21.976143333366355,
+                  "median": 21.865775500032214,
+                  "p95": 24.05461779999314,
+                  "total": 65.92843000009907
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 101.5954585000145,
+                  "median": 103.55095449995133,
+                  "p95": 104.26573270004837,
+                  "total": 304.7863755000435
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 248.3454646666511,
+                  "median": 251.98176899993996,
+                  "p95": 257.68583940000553,
+                  "total": 745.0363939999534
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.01627433319602763,
+                  "median": 0.009573999932399602,
+                  "p95": 0.028295799825173162,
+                  "total": 0.048822999588082894
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 248.38972833337417,
+                  "median": 252.01662199992825,
+                  "p95": 257.71538330006933,
+                  "total": 745.1691850001225
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 0,
+            "cache_misses": 0
+          },
+          {
+            "pass": 2,
+            "iterator_startup_ms": 0.07551399994554231,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 7.056748621163072,
+              "stage_percent_of_batch": {
+                "data_wait": 99.9889371352114,
+                "h2d": 0.0029378420687924223
+              },
+              "unattributed_percent": 0.008125022719802689,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.0015808332894569805,
+                  "median": 0.0015979999261617195,
+                  "p95": 0.0016335499594788416,
+                  "total": 0.004742499868370942
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 21.86627299996265,
+                  "median": 21.948316000020895,
+                  "p95": 21.994109799902617,
+                  "total": 65.59881899988795
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 119.34862933336869,
+                  "median": 110.95826100006434,
+                  "p95": 139.24510980012883,
+                  "total": 358.04588800010606
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 283.3852883333445,
+                  "median": 266.91530200014313,
+                  "p95": 323.2351392999135,
+                  "total": 850.1558650000334
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.008326333348425882,
+                  "median": 0.008313000080306665,
+                  "p95": 0.00847500000418222,
+                  "total": 0.024979000045277644
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 283.4166423332742,
+                  "median": 266.9428639999296,
+                  "p95": 323.2634491999761,
+                  "total": 850.2499269998225
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 0,
+            "cache_misses": 0
+          }
+        ],
+        "timing": {
+          "units": "milliseconds",
+          "device": "cpu",
+          "cuda_timing": "not applicable; CPU wall time",
+          "batches": 3,
+          "samples": 6,
+          "samples_per_second": 8.05186274577231,
+          "stage_percent_of_batch": {
+            "data_wait": 99.98217975154606,
+            "h2d": 0.006551934858669024
+          },
+          "unattributed_percent": 0.011268313595263169,
+          "stages": {
+            "cpu_augmentation_per_sample_ms": {
+              "count": 3,
+              "mean": 0.001649333360849899,
+              "median": 0.0016130001085912227,
+              "p95": 0.0017164999349006393,
+              "total": 0.004948000082549697
+            },
+            "cpu_normalized_cloud_per_sample_ms": {
+              "count": 3,
+              "mean": 21.976143333366355,
+              "median": 21.865775500032214,
+              "p95": 24.05461779999314,
+              "total": 65.92843000009907
+            },
+            "cpu_sampling_per_sample_ms": {
+              "count": 3,
+              "mean": 101.5954585000145,
+              "median": 103.55095449995133,
+              "p95": 104.26573270004837,
+              "total": 304.7863755000435
+            },
+            "data_wait_ms": {
+              "count": 3,
+              "mean": 248.3454646666511,
+              "median": 251.98176899993996,
+              "p95": 257.68583940000553,
+              "total": 745.0363939999534
+            },
+            "h2d_ms": {
+              "count": 3,
+              "mean": 0.01627433319602763,
+              "median": 0.009573999932399602,
+              "p95": 0.028295799825173162,
+              "total": 0.048822999588082894
+            },
+            "total_batch_ms": {
+              "count": 3,
+              "mean": 248.38972833337417,
+              "median": 252.01662199992825,
+              "p95": 257.71538330006933,
+              "total": 745.1691850001225
+            }
+          }
+        },
+        "actual_pinned": false,
+        "identity_verified": true,
+        "cache_hits": 0,
+        "cache_misses": 0,
+        "batch_preparation_median_ms": 251.98176899993996,
+        "batch_preparation_p95_ms": 257.68583940000553,
+        "h2d_median_ms": 0.009573999932399602,
+        "total_batch_median_ms": 252.01662199992825,
+        "plants_per_second": 8.05186274577231,
+        "non_blocking_cuda_effective": false
+      },
+      {
+        "num_workers": 0,
+        "mode": "cache_population",
+        "runtime": {
+          "pin_memory": false,
+          "prefetch_factor": null,
+          "persistent_workers": false,
+          "non_blocking": false,
+          "cache_dir": "<temporary local cache>",
+          "detailed_timing": true,
+          "telemetry": false
+        },
+        "status": "ok",
+        "passes": [
+          {
+            "pass": 1,
+            "iterator_startup_ms": 0.11973200003012607,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 6.954129478274789,
+              "stage_percent_of_batch": {
+                "data_wait": 99.96165701626656,
+                "h2d": 0.003597371215698981
+              },
+              "unattributed_percent": 0.03474561251774675,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.0012803333599246496,
+                  "median": 0.0012925000874020043,
+                  "p95": 0.0013460500326800684,
+                  "total": 0.0038410000797739485
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 31.59492666668484,
+                  "median": 31.20065300004171,
+                  "p95": 32.928759199978686,
+                  "total": 94.78478000005452
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 111.65041966664073,
+                  "median": 111.07987749994663,
+                  "p95": 116.28185139998095,
+                  "total": 334.9512589999222
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 287.4886276666378,
+                  "median": 285.4945740000403,
+                  "p95": 299.51611589997356,
+                  "total": 862.4658829999134
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.010346000105225054,
+                  "median": 0.008784000101513811,
+                  "p95": 0.013642200087815581,
+                  "total": 0.031038000315675163
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 287.5989016667215,
+                  "median": 285.5236180000702,
+                  "p95": 299.6707207000327,
+                  "total": 862.7967050001644
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 0,
+            "cache_misses": 6
+          },
+          {
+            "pass": 2,
+            "iterator_startup_ms": 0.057406999985687435,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 9.308718592843118,
+              "stage_percent_of_batch": {
+                "data_wait": 99.98576852074099,
+                "h2d": 0.0037089037464557995
+              },
+              "unattributed_percent": 0.010522575512549646,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.0013805000662614475,
+                  "median": 0.0013570000874096877,
+                  "p95": 0.001465450066007179,
+                  "total": 0.0041415001987843425
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 9.515415166674757,
+                  "median": 8.622126999966895,
+                  "p95": 11.915667100095106,
+                  "total": 28.54624550002427
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 97.4263156666666,
+                  "median": 96.00819749994116,
+                  "p95": 104.92463114995871,
+                  "total": 292.2789469999998
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 214.82176633336772,
+                  "median": 210.11217799991755,
+                  "p95": 234.770042300147,
+                  "total": 644.4652990001032
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.007968666598875037,
+                  "median": 0.00797199982116581,
+                  "p95": 0.007972000025802117,
+                  "total": 0.02390599979662511
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 214.85234299999925,
+                  "median": 210.1454589999321,
+                  "p95": 234.80080689996612,
+                  "total": 644.5570289999978
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 6,
+            "cache_misses": 0
+          }
+        ],
+        "timing": {
+          "units": "milliseconds",
+          "device": "cpu",
+          "cuda_timing": "not applicable; CPU wall time",
+          "batches": 3,
+          "samples": 6,
+          "samples_per_second": 6.954129478274789,
+          "stage_percent_of_batch": {
+            "data_wait": 99.96165701626656,
+            "h2d": 0.003597371215698981
+          },
+          "unattributed_percent": 0.03474561251774675,
+          "stages": {
+            "cpu_augmentation_per_sample_ms": {
+              "count": 3,
+              "mean": 0.0012803333599246496,
+              "median": 0.0012925000874020043,
+              "p95": 0.0013460500326800684,
+              "total": 0.0038410000797739485
+            },
+            "cpu_normalized_cloud_per_sample_ms": {
+              "count": 3,
+              "mean": 31.59492666668484,
+              "median": 31.20065300004171,
+              "p95": 32.928759199978686,
+              "total": 94.78478000005452
+            },
+            "cpu_sampling_per_sample_ms": {
+              "count": 3,
+              "mean": 111.65041966664073,
+              "median": 111.07987749994663,
+              "p95": 116.28185139998095,
+              "total": 334.9512589999222
+            },
+            "data_wait_ms": {
+              "count": 3,
+              "mean": 287.4886276666378,
+              "median": 285.4945740000403,
+              "p95": 299.51611589997356,
+              "total": 862.4658829999134
+            },
+            "h2d_ms": {
+              "count": 3,
+              "mean": 0.010346000105225054,
+              "median": 0.008784000101513811,
+              "p95": 0.013642200087815581,
+              "total": 0.031038000315675163
+            },
+            "total_batch_ms": {
+              "count": 3,
+              "mean": 287.5989016667215,
+              "median": 285.5236180000702,
+              "p95": 299.6707207000327,
+              "total": 862.7967050001644
+            }
+          }
+        },
+        "actual_pinned": false,
+        "identity_verified": true,
+        "cache_hits": 0,
+        "cache_misses": 6,
+        "batch_preparation_median_ms": 285.4945740000403,
+        "batch_preparation_p95_ms": 299.51611589997356,
+        "h2d_median_ms": 0.008784000101513811,
+        "total_batch_median_ms": 285.5236180000702,
+        "plants_per_second": 6.954129478274789,
+        "non_blocking_cuda_effective": false
+      },
+      {
+        "num_workers": 0,
+        "mode": "cache_warm",
+        "runtime": {
+          "pin_memory": false,
+          "prefetch_factor": null,
+          "persistent_workers": false,
+          "non_blocking": false,
+          "cache_dir": "<temporary local cache>",
+          "detailed_timing": true,
+          "telemetry": false
+        },
+        "status": "ok",
+        "passes": [
+          {
+            "pass": 1,
+            "iterator_startup_ms": 0.059780999890790554,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 9.95743587821361,
+              "stage_percent_of_batch": {
+                "data_wait": 99.98459883393937,
+                "h2d": 0.004055497653598772
+              },
+              "unattributed_percent": 0.011345668407028173,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.0013604999367089476,
+                  "median": 0.001376999989588512,
+                  "p95": 0.0014089499586589227,
+                  "total": 0.004081499810126843
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 7.4501098332954525,
+                  "median": 7.426430999998956,
+                  "p95": 7.5405883498888215,
+                  "total": 22.350329499886357
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 92.52698833336126,
+                  "median": 91.14123350002501,
+                  "p95": 95.87509805004402,
+                  "total": 277.5809650000838
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 200.82398733332715,
+                  "median": 197.94513600004393,
+                  "p95": 207.7918685999748,
+                  "total": 602.4719619999814
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.008145666621809747,
+                  "median": 0.008091999916359782,
+                  "p95": 0.008380899930671148,
+                  "total": 0.024436999865429243
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 200.85492133330263,
+                  "median": 197.97521200007395,
+                  "p95": 207.82094469993808,
+                  "total": 602.5647639999079
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 6,
+            "cache_misses": 0
+          },
+          {
+            "pass": 2,
+            "iterator_startup_ms": 0.056765999943309,
+            "timing": {
+              "units": "milliseconds",
+              "device": "cpu",
+              "cuda_timing": "not applicable; CPU wall time",
+              "batches": 3,
+              "samples": 6,
+              "samples_per_second": 10.535833547272565,
+              "stage_percent_of_batch": {
+                "data_wait": 99.98447123490125,
+                "h2d": 0.0041607762618253025
+              },
+              "unattributed_percent": 0.011367988836919102,
+              "stages": {
+                "cpu_augmentation_per_sample_ms": {
+                  "count": 3,
+                  "mean": 0.001503833383746193,
+                  "median": 0.0014370000371854985,
+                  "p95": 0.0016755000729062886,
+                  "total": 0.004511500151238579
+                },
+                "cpu_normalized_cloud_per_sample_ms": {
+                  "count": 3,
+                  "mean": 7.888544000024922,
+                  "median": 7.94936800002688,
+                  "p95": 8.183768049912032,
+                  "total": 23.665632000074766
+                },
+                "cpu_sampling_per_sample_ms": {
+                  "count": 3,
+                  "mean": 86.6048516667206,
+                  "median": 86.39051150009891,
+                  "p95": 88.20915679993959,
+                  "total": 259.8145550001618
+                },
+                "data_wait_ms": {
+                  "count": 3,
+                  "mean": 189.79888166662326,
+                  "median": 190.02713099985158,
+                  "p95": 193.1662536001113,
+                  "total": 569.3966449998697
+                },
+                "h2d_ms": {
+                  "count": 3,
+                  "mean": 0.007898333327223858,
+                  "median": 0.007902000106696505,
+                  "p95": 0.008252999873548106,
+                  "total": 0.02369499998167157
+                },
+                "total_batch_ms": {
+                  "count": 3,
+                  "mean": 189.82835966668668,
+                  "median": 190.06029100000887,
+                  "p95": 193.1936004999443,
+                  "total": 569.4850790000601
+                }
+              }
+            },
+            "actual_pinned": false,
+            "cache_hits": 6,
+            "cache_misses": 0
+          }
+        ],
+        "timing": {
+          "units": "milliseconds",
+          "device": "cpu",
+          "cuda_timing": "not applicable; CPU wall time",
+          "batches": 3,
+          "samples": 6,
+          "samples_per_second": 10.535833547272565,
+          "stage_percent_of_batch": {
+            "data_wait": 99.98447123490125,
+            "h2d": 0.0041607762618253025
+          },
+          "unattributed_percent": 0.011367988836919102,
+          "stages": {
+            "cpu_augmentation_per_sample_ms": {
+              "count": 3,
+              "mean": 0.001503833383746193,
+              "median": 0.0014370000371854985,
+              "p95": 0.0016755000729062886,
+              "total": 0.004511500151238579
+            },
+            "cpu_normalized_cloud_per_sample_ms": {
+              "count": 3,
+              "mean": 7.888544000024922,
+              "median": 7.94936800002688,
+              "p95": 8.183768049912032,
+              "total": 23.665632000074766
+            },
+            "cpu_sampling_per_sample_ms": {
+              "count": 3,
+              "mean": 86.6048516667206,
+              "median": 86.39051150009891,
+              "p95": 88.20915679993959,
+              "total": 259.8145550001618
+            },
+            "data_wait_ms": {
+              "count": 3,
+              "mean": 189.79888166662326,
+              "median": 190.02713099985158,
+              "p95": 193.1662536001113,
+              "total": 569.3966449998697
+            },
+            "h2d_ms": {
+              "count": 3,
+              "mean": 0.007898333327223858,
+              "median": 0.007902000106696505,
+              "p95": 0.008252999873548106,
+              "total": 0.02369499998167157
+            },
+            "total_batch_ms": {
+              "count": 3,
+              "mean": 189.82835966668668,
+              "median": 190.06029100000887,
+              "p95": 193.1936004999443,
+              "total": 569.4850790000601
+            }
+          }
+        },
+        "actual_pinned": false,
+        "identity_verified": true,
+        "cache_hits": 6,
+        "cache_misses": 0,
+        "batch_preparation_median_ms": 190.02713099985158,
+        "batch_preparation_p95_ms": 193.1662536001113,
+        "h2d_median_ms": 0.007902000106696505,
+        "total_batch_median_ms": 190.06029100000887,
+        "plants_per_second": 10.535833547272565,
+        "non_blocking_cuda_effective": false
+      }
+    ],
+    "note": "Two bounded passes per row; no model training. Synchronized loader+H2D throughput is not model throughput. OS file cache is uncontrolled; uncached means application cache disabled. Warmup excluded. Hashing occurs after each measured pass. Worker prefetch may read extra train/val plants. Cache population uses an isolated fresh subdirectory per configuration; report hit/miss counts. No automatic runtime recommendations."
+  },
+  "reduced_model_config": {
+    "npoints": [
+      64,
+      16,
+      4,
+      2
+    ],
+    "nsamples": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "chunk_size": 32
+  },
+  "profile": {
+    "warmup_batches": 1,
+    "profile_batches": 2,
+    "metrics": {
+      "loss": 0.6997028291225433,
+      "accuracy": 0.537109375,
+      "evaluated_points": 1024,
+      "class_0_iou": 0.3938618925831202,
+      "class_0_precision": 0.537521815008726,
+      "class_0_recall": 0.5957446808510638,
+      "class_0_f1": 0.5651376146788991,
+      "class_1_iou": 0.33798882681564246,
+      "class_1_precision": 0.5365853658536586,
+      "class_1_recall": 0.47731755424063116,
+      "class_1_f1": 0.5052192066805845,
+      "mIoU": 0.36592535969938134,
+      "batches": 2,
+      "seconds": 0.5579262930000368,
+      "timing": {
+        "units": "milliseconds",
+        "device": "cpu",
+        "cuda_timing": "not applicable; CPU wall time",
+        "batches": 2,
+        "samples": 4,
+        "samples_per_second": 7.170650378849379,
+        "stage_percent_of_batch": {
+          "backward": 4.257456960129677,
+          "batch_preparation": 0.05720816579526093,
+          "data_wait": 82.75881078607173,
+          "forward": 9.13188815187202,
+          "gradient_check": 1.7518963717462508,
+          "h2d": 0.005950026387537268,
+          "loss": 0.11471409279635154,
+          "metrics": 0.0809914203729448,
+          "optimizer": 1.6148173788542792
+        },
+        "unattributed_percent": 0.22626664597394808,
+        "stages": {
+          "backward_ms": {
+            "count": 2,
+            "mean": 11.87467450006352,
+            "median": 11.87467450006352,
+            "p95": 11.970773350105901,
+            "total": 23.74934900012704
+          },
+          "batch_preparation_ms": {
+            "count": 2,
+            "mean": 0.15956200002165133,
+            "median": 0.15956200002165133,
+            "p95": 0.1779679000833312,
+            "total": 0.31912400004330266
+          },
+          "data_wait_ms": {
+            "count": 2,
+            "mean": 230.82651200002147,
+            "median": 230.82651200002147,
+            "p95": 231.50465660005466,
+            "total": 461.65302400004293
+          },
+          "forward_ms": {
+            "count": 2,
+            "mean": 25.47018100005971,
+            "median": 25.47018100005971,
+            "p95": 25.567307200083178,
+            "total": 50.94036200011942
+          },
+          "gradient_check_ms": {
+            "count": 2,
+            "mean": 4.886297000098239,
+            "median": 4.886297000098239,
+            "p95": 4.997421800032953,
+            "total": 9.772594000196477
+          },
+          "h2d_ms": {
+            "count": 2,
+            "mean": 0.016595499914728862,
+            "median": 0.016595499914728862,
+            "p95": 0.018199749831637746,
+            "total": 0.033190999829457724
+          },
+          "loss_ms": {
+            "count": 2,
+            "mean": 0.31995449990063207,
+            "median": 0.31995449990063207,
+            "p95": 0.33775694989799376,
+            "total": 0.6399089998012641
+          },
+          "metrics_ms": {
+            "count": 2,
+            "mean": 0.2258969998365501,
+            "median": 0.2258969998365501,
+            "p95": 0.23433809978996578,
+            "total": 0.4517939996731002
+          },
+          "optimizer_ms": {
+            "count": 2,
+            "mean": 4.503963499928432,
+            "median": 4.503963499928432,
+            "p95": 4.571340649931699,
+            "total": 9.007926999856863
+          },
+          "total_batch_ms": {
+            "count": 2,
+            "mean": 278.91472800001793,
+            "median": 278.91472800001793,
+            "p95": 280.0240545000406,
+            "total": 557.8294560000359
+          }
+        }
+      }
+    },
+    "telemetry": {
+      "cuda_available": false,
+      "device": "cpu",
+      "gpu": null,
+      "allocated_bytes": null,
+      "reserved_bytes": null,
+      "peak_allocated_bytes": null,
+      "peak_reserved_bytes": null
+    },
+    "operators": {
+      "measurement_window": "single continuous window, warmup excluded, no profiler.step cycles",
+      "set_abstraction": [
+        {
+          "stage": 1,
+          "input_N": 256,
+          "centroids": 64,
+          "name": "agri3d::sa1_N256_S64",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 200.8740000000398,
+          "cpu_total_us": 12130.848000000056,
+          "cpu_mean_us": 6065.424000000028,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2323456,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -90112,
+          "self_device_memory_bytes": 0,
+          "cpu_percent_of_forward": 23.794844482531087,
+          "cuda_percent_of_forward": null
+        },
+        {
+          "stage": 2,
+          "input_N": 64,
+          "centroids": 16,
+          "name": "agri3d::sa2_N64_S16",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 121.1020000000135,
+          "cpu_total_us": 4460.736999999994,
+          "cpu_mean_us": 2230.368499999997,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 1293056,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -169984,
+          "self_device_memory_bytes": 0,
+          "cpu_percent_of_forward": 8.74980406913611,
+          "cuda_percent_of_forward": null
+        },
+        {
+          "stage": 3,
+          "input_N": 16,
+          "centroids": 4,
+          "name": "agri3d::sa3_N16_S4",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 103.39400000011665,
+          "cpu_total_us": 2873.643000000011,
+          "cpu_mean_us": 1436.8215000000055,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 649920,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -83456,
+          "self_device_memory_bytes": 0,
+          "cpu_percent_of_forward": 5.6366948364462255,
+          "cuda_percent_of_forward": null
+        },
+        {
+          "stage": 4,
+          "input_N": 4,
+          "centroids": 2,
+          "name": "agri3d::sa4_N4_S2",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 102.98600000000442,
+          "cpu_total_us": 3126.31600000005,
+          "cpu_mean_us": 1563.158000000025,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 656736,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -82688,
+          "self_device_memory_bytes": 0,
+          "cpu_percent_of_forward": 6.132316802852488,
+          "cuda_percent_of_forward": null
+        }
+      ],
+      "stage_fps": [
+        {
+          "name": "agri3d::sa1_N256_S64/fps",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 2423.580999998987,
+          "cpu_total_us": 7174.588999999978,
+          "cpu_mean_us": 3587.294499999989,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2048,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -2136176,
+          "self_device_memory_bytes": 0
+        },
+        {
+          "name": "agri3d::sa2_N64_S16/fps",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 704.6979999993346,
+          "cpu_total_us": 1876.8839999999618,
+          "cpu_mean_us": 938.4419999999809,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 512,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -140912,
+          "self_device_memory_bytes": 0
+        },
+        {
+          "name": "agri3d::sa3_N16_S4/fps",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 240.39699999967706,
+          "cpu_total_us": 644.3549999999523,
+          "cpu_mean_us": 322.17749999997613,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 128,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -10736,
+          "self_device_memory_bytes": 0
+        },
+        {
+          "name": "agri3d::sa4_N4_S2/fps",
+          "calls": 2,
+          "input_shapes": "[]",
+          "self_cpu_us": 167.35299999991548,
+          "cpu_total_us": 420.0460000000312,
+          "cpu_mean_us": 210.0230000000156,
+          "cuda_total_us": 0,
+          "cuda_mean_us": 0.0,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 64,
+          "cuda_memory_bytes": 0,
+          "self_device_us": 0,
+          "device_total_us": 0,
+          "self_cpu_memory_bytes": -1824,
+          "self_device_memory_bytes": 0
+        }
+      ],
+      "forward_components": {
+        "fps": {
+          "calls": 8,
+          "cpu_total_us": 10270.039000000019,
+          "cuda_total_us": 0,
+          "self_cpu_us": 154.16500000009546,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2752,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 1283.7548750000024,
+          "cuda_mean_us": 0.0,
+          "cpu_percent_of_forward": 20.144839077575483,
+          "cuda_percent_of_forward": null
+        },
+        "neighborhood": {
+          "calls": 8,
+          "cpu_total_us": 3048.658000000054,
+          "cuda_total_us": 0,
+          "self_cpu_us": 125.9100000000908,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 22016,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 381.08225000000675,
+          "cuda_mean_us": 0.0,
+          "cpu_percent_of_forward": 5.979989444301437,
+          "cuda_percent_of_forward": null
+        },
+        "interpolation": {
+          "calls": 8,
+          "cpu_total_us": 15677.79099999994,
+          "cuda_total_us": 0,
+          "self_cpu_us": 3584.473000000784,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 933504,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 1959.7238749999924,
+          "cuda_mean_us": 0.0,
+          "cpu_percent_of_forward": 30.752227599803607,
+          "cuda_percent_of_forward": null
+        },
+        "neural_mlp": {
+          "calls": 16,
+          "cpu_total_us": 14306.284999999712,
+          "cuda_total_us": 0,
+          "self_cpu_us": 2240.4299999998184,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 8513536,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 894.142812499982,
+          "cuda_mean_us": 0.0,
+          "cpu_percent_of_forward": 28.061997537003084,
+          "cuda_percent_of_forward": null
+        }
+      },
+      "family_totals": {
+        "fps": {
+          "calls": 8,
+          "cpu_total_us": 10270.039000000019,
+          "cuda_total_us": 0,
+          "self_cpu_us": 154.16500000009546,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2752,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 1283.7548750000024,
+          "cuda_mean_us": 0.0
+        },
+        "square_distance": {
+          "calls": 34,
+          "cpu_total_us": 3563.0109999997076,
+          "cuda_total_us": 0,
+          "self_cpu_us": 1472.718999999517,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 559360,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 104.79444117646199,
+          "cuda_mean_us": 0.0
+        },
+        "matrix_multiply": {
+          "calls": 34,
+          "cpu_total_us": 349.0130000001518,
+          "cuda_total_us": 0,
+          "self_cpu_us": 340.40600000016275,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 559360,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 10.265088235298583,
+          "cuda_mean_us": 0.0
+        },
+        "h2d": {
+          "calls": 2,
+          "cpu_total_us": 87.50299999996787,
+          "cuda_total_us": 0,
+          "self_cpu_us": 84.28999999994994,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": -10752,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 43.751499999983935,
+          "cuda_mean_us": 0.0
+        },
+        "topk": {
+          "calls": 34,
+          "cpu_total_us": 1646.4839999999094,
+          "cuda_total_us": 0,
+          "self_cpu_us": 1646.4839999999094,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 81408,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 48.42599999999734,
+          "cuda_mean_us": 0.0
+        },
+        "indexing_gather": {
+          "calls": 170,
+          "cpu_total_us": 10901.05900000059,
+          "cuda_total_us": 0,
+          "self_cpu_us": 4929.762000000395,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 7266112,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 64.12387647059171,
+          "cuda_mean_us": 0.0
+        },
+        "radius_query": {
+          "calls": 8,
+          "cpu_total_us": 3048.658000000054,
+          "cuda_total_us": 0,
+          "self_cpu_us": 125.9100000000908,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 22016,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 381.08225000000675,
+          "cuda_mean_us": 0.0
+        },
+        "interpolation": {
+          "calls": 8,
+          "cpu_total_us": 15677.79099999994,
+          "cuda_total_us": 0,
+          "self_cpu_us": 3584.473000000784,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 933504,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 1959.7238749999924,
+          "cuda_mean_us": 0.0
+        },
+        "conv1d": {
+          "calls": 22,
+          "cpu_total_us": 5796.292999999976,
+          "cuda_total_us": 0,
+          "self_cpu_us": 64.07900000017253,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2662400,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 263.46786363636255,
+          "cuda_mean_us": 0.0
+        },
+        "conv2d": {
+          "calls": 162,
+          "cpu_total_us": 29692.336000000243,
+          "cuda_total_us": 0,
+          "self_cpu_us": 17641.760999999242,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 24031760,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 183.28602469135953,
+          "cuda_mean_us": 0.0
+        },
+        "batch_norm": {
+          "calls": 176,
+          "cpu_total_us": 13157.734999999986,
+          "cuda_total_us": 0,
+          "self_cpu_us": 4017.995999998937,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 19251200,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 74.75985795454538,
+          "cuda_mean_us": 0.0
+        },
+        "copies": {
+          "calls": 3184,
+          "cpu_total_us": 9036.449999999197,
+          "cuda_total_us": 0,
+          "self_cpu_us": 4532.859000000695,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 212288,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 2.8380810301505015,
+          "cuda_mean_us": 0.0
+        },
+        "first_sa": {
+          "calls": 6,
+          "cpu_total_us": 20973.494999999995,
+          "cuda_total_us": 0,
+          "self_cpu_us": 2826.5589999989606,
+          "self_cuda_us": 0,
+          "cpu_memory_bytes": 2341888,
+          "cuda_memory_bytes": 0,
+          "cpu_mean_us": 3495.582499999999,
+          "cuda_mean_us": 0.0
+        }
+      },
+      "note": "Ranges are inclusive/nested; do not add their totals. Self times rank leaf work. Copy operators are not exclusively H2D; inspect H2D range/trace lanes."
+    }
+  },
+  "synthetic_generation": {
+    "points_per_cloud": 100000,
+    "xyz": "numpy default_rng(plant index), independent normal per axis, float32",
+    "color": "RGB=(0,0,0) if z>0 else (0,255,0)",
+    "format": "binary PLY",
+    "train_indices": "0..7",
+    "val_indices": "8..9",
+    "test_index_10": "manifest only, no file",
+    "model_geometry": {
+      "points": 256,
+      "npoints": [
+        64,
+        16,
+        4,
+        2
+      ],
+      "nsamples": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "chunk_size": 32
+    }
+  }
+}
