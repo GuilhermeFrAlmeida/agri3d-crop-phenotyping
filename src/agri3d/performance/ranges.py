@@ -7,6 +7,18 @@ from functools import wraps
 import torch
 
 _ENABLED = ContextVar("pointnet2_profiling", default=False)
+_LOGICAL_STAGE = ContextVar("pointnet2_stage", default=None)
+
+
+@contextmanager
+def logical_stage(name):
+    token = _LOGICAL_STAGE.set(name)
+    try:
+        yield
+    finally:
+        _LOGICAL_STAGE.reset(token)
+
+
 _NVTX = ContextVar("pointnet2_nvtx", default=False)
 
 
@@ -38,7 +50,15 @@ def profile_range(name):
         def wrapped(*args, **kwargs):
             if not _ENABLED.get():
                 return function(*args, **kwargs)
-            with range_scope(name):
+            with ExitStack() as stack:
+                stack.enter_context(range_scope(name))
+                if _LOGICAL_STAGE.get() and name in (
+                    "agri3d::fps",
+                    "agri3d::radius_query",
+                ):
+                    stack.enter_context(
+                        range_scope(_LOGICAL_STAGE.get() + "/" + name.split("::")[-1])
+                    )
                 return function(*args, **kwargs)
 
         return wrapped

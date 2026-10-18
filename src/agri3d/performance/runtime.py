@@ -33,7 +33,7 @@ class RuntimeOptions:
         ):
             if type(getattr(self, name)) is not bool:
                 raise TypeError(f"{name} must be boolean")
-        if not isinstance(num_workers, int) or num_workers < 0:
+        if type(num_workers) is not int or num_workers < 0:
             raise ValueError("num_workers must be nonnegative")
         if self.prefetch_factor is not None and (
             type(self.prefetch_factor) is not int or self.prefetch_factor < 1

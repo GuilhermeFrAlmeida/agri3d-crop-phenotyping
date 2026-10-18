@@ -64,6 +64,9 @@ class SegmentationDataset(Dataset):
             else manifest
         )
         validate_manifest(records)
+        self.manifest_hash = hashlib.sha256(
+            json.dumps(records, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
         if split not in ("train", "val", "test"):
             raise ValueError("Unknown split")
         self.records = [r for r in records if r["split"] == split]
@@ -128,7 +131,16 @@ class SegmentationDataset(Dataset):
         started = time.perf_counter() if self.profile_data else 0
         path = self.root / r["path"]
         pcd = (
-            self.cache.get(path, lambda: self._normalized_cloud(path))
+            self.cache.get(
+                path,
+                lambda: self._normalized_cloud(path),
+                {
+                    "manifest_sha256": self.manifest_hash,
+                    "sample_id": r["sample_id"],
+                    "path": r["path"],
+                    "split": self.split,
+                },
+            )
             if self.cache
             else self._normalized_cloud(path)
         )
@@ -157,6 +169,7 @@ class SegmentationDataset(Dataset):
         }
 
         if self.profile_data:
+            result["_cache_hit"] = int(self.cache.last_hit) if self.cache else -1
             result["_data_timing_ms"] = {
                 "normalized_cloud": normalized_ms,
                 "sampling": sampling_ms,

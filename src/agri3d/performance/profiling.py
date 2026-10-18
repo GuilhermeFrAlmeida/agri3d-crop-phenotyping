@@ -1,6 +1,7 @@
 """Bounded disposable train/val profiling, never a persisted training experiment."""
 
 import copy
+import re
 from contextlib import nullcontext
 from dataclasses import asdict
 from functools import wraps
@@ -29,7 +30,7 @@ from agri3d.training.pointnet2_runner import (
     write_json,
 )
 
-from .ranges import profiling_ranges, range_scope
+from .ranges import logical_stage, profiling_ranges, range_scope
 from .runtime import RuntimeOptions
 from .timing import telemetry
 
@@ -41,12 +42,25 @@ def instrument_stages(model):
             @wraps(original)
             def forward(*args, **kwargs):
                 count = args[0].shape[1]
-                with range_scope(f"agri3d::sa{stage}_N{count}_S{min(count, npoint)}"):
+                label = f"agri3d::sa{stage}_N{count}_S{min(count, npoint)}"
+                with range_scope(label), logical_stage(label):
                     return original(*args, **kwargs)
 
             return forward
 
         module.forward = attach(module.forward, index + 1, module.npoint)
+    for module in [*model.abstraction, *model.propagation]:
+        original = module.mlp.forward
+
+        def attach_mlp(original):
+            @wraps(original)
+            def forward(*args, **kwargs):
+                with range_scope("agri3d::neural_mlp"):
+                    return original(*args, **kwargs)
+
+            return forward
+
+        module.mlp.forward = attach_mlp(original)
     for index, module in enumerate(model.propagation):
 
         def attach(original, stage):
@@ -77,6 +91,12 @@ def operator_summary(profiler):
                 "input_shapes": str(event.input_shapes),
                 "self_cpu_us": event.self_cpu_time_total,
                 "cpu_total_us": event.cpu_time_total,
+                "cpu_mean_us": event.cpu_time_total / event.count,
+                "cuda_total_us": device_stat(event, "device_time_total"),
+                "cuda_mean_us": device_stat(event, "device_time_total") / event.count,
+                "self_cuda_us": device_stat(event, "self_device_time_total"),
+                "cpu_memory_bytes": event.cpu_memory_usage,
+                "cuda_memory_bytes": device_stat(event, "device_memory_usage"),
                 "self_device_us": device_stat(event, "self_device_time_total"),
                 "device_total_us": device_stat(event, "device_time_total"),
                 "self_cpu_memory_bytes": event.self_cpu_memory_usage,
@@ -88,6 +108,8 @@ def operator_summary(profiler):
     families = {
         "fps": ["agri3d::fps"],
         "square_distance": ["agri3d::square_distance"],
+        "matrix_multiply": ["aten::bmm", "aten::mm", "aten::matmul"],
+        "h2d": ["agri3d::h2d"],
         "topk": ["aten::topk"],
         "indexing_gather": ["agri3d::index_points", "aten::gather"],
         "radius_query": ["agri3d::radius_query"],
@@ -98,7 +120,99 @@ def operator_summary(profiler):
         "copies": ["aten::to", "aten::_to_copy", "aten::copy_"],
         "first_sa": ["agri3d::sa1_"],
     }
+    stages = []
+    forward = next((r for r in rows if r["name"] == "agri3d::forward"), None)
+    for row in rows:
+        match = re.fullmatch(r"agri3d::sa(\d+)_N(\d+)_S(\d+)", row["name"])
+        if match:
+            stages.append(
+                {
+                    "stage": int(match[1]),
+                    "input_N": int(match[2]),
+                    "centroids": int(match[3]),
+                    **row,
+                    "cpu_percent_of_forward": 100
+                    * row["cpu_total_us"]
+                    / forward["cpu_total_us"]
+                    if forward and forward["cpu_total_us"]
+                    else None,
+                    "cuda_percent_of_forward": 100
+                    * row["cuda_total_us"]
+                    / forward["cuda_total_us"]
+                    if forward and forward["cuda_total_us"]
+                    else None,
+                }
+            )
+
+    def totals(group):
+        keys = (
+            "calls",
+            "cpu_total_us",
+            "cuda_total_us",
+            "self_cpu_us",
+            "self_cuda_us",
+            "cpu_memory_bytes",
+            "cuda_memory_bytes",
+        )
+        values = {key: sum(row[key] for row in group) for key in keys}
+        values["cpu_mean_us"] = (
+            values["cpu_total_us"] / values["calls"] if values["calls"] else None
+        )
+        values["cuda_mean_us"] = (
+            values["cuda_total_us"] / values["calls"] if values["calls"] else None
+        )
+        return values
+
     return {
+        "measurement_window": "single continuous window, warmup excluded, no profiler.step cycles",
+        "set_abstraction": sorted(stages, key=lambda row: row["stage"]),
+        "stage_fps": [
+            {
+                **row,
+                "stage": int(match[1]),
+                "input_N": int(match[2]),
+                "centroids": int(match[3]),
+                "cpu_percent_of_forward": 100
+                * row["cpu_total_us"]
+                / forward["cpu_total_us"]
+                if forward and forward["cpu_total_us"]
+                else None,
+                "cuda_percent_of_forward": 100
+                * row["cuda_total_us"]
+                / forward["cuda_total_us"]
+                if forward and forward["cuda_total_us"]
+                else None,
+            }
+            for row in rows
+            if (
+                match := re.fullmatch(r"agri3d::sa(\d+)_N(\d+)_S(\d+)/fps", row["name"])
+            )
+        ],
+        "forward_components": {
+            name: {
+                **totals([r for r in rows if r["name"] == key]),
+                "cpu_percent_of_forward": 100
+                * sum(r["cpu_total_us"] for r in rows if r["name"] == key)
+                / forward["cpu_total_us"]
+                if forward and forward["cpu_total_us"]
+                else None,
+                "cuda_percent_of_forward": 100
+                * sum(r["cuda_total_us"] for r in rows if r["name"] == key)
+                / forward["cuda_total_us"]
+                if forward and forward["cuda_total_us"]
+                else None,
+            }
+            for name, key in {
+                "fps": "agri3d::fps",
+                "neighborhood": "agri3d::radius_query",
+                "interpolation": "agri3d::interpolation",
+                "neural_mlp": "agri3d::neural_mlp",
+            }.items()
+        },
+        "family_totals": {
+            name: totals([r for r in rows if any(p in r["name"] for p in patterns)])
+            for name, patterns in families.items()
+        },
         "operators": sorted(
             rows, key=lambda r: max(r["self_cpu_us"], r["self_device_us"]), reverse=True
         ),
@@ -160,6 +274,7 @@ def profile_model(
                 record_shapes=True,
                 profile_memory=True,
                 with_stack=False,
+                acc_events=True,
             )
             if use_torch_profiler
             else nullcontext()
@@ -173,7 +288,8 @@ def profile_model(
                 max_batches=profile_batches,
                 non_blocking=runtime.non_blocking,
                 detailed_timing=runtime.detailed_timing,
-                step_callback=profiler.step if profiler is not None else None,
+                # One continuous measurement window: no per-batch cycle clearing.
+                step_callback=None,
             )
         if metrics["batches"] != profile_batches:
             raise ValueError("Loader ended before requested measured batch count")

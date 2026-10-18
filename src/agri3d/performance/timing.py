@@ -76,6 +76,44 @@ class BatchTimings:
             "batches": len(self.rows),
             "samples": self.samples,
             "samples_per_second": self.samples / (totals / 1000) if totals else None,
+            "largest_measured_stage": max(
+                (
+                    (field.removesuffix("_ms"), sum(r.get(field, 0) for r in self.rows))
+                    for field in fields
+                    if field != "total_batch_ms" and not field.startswith("cpu_")
+                ),
+                key=lambda item: item[1],
+                default=(None, 0),
+            )[0],
+            "stage_percent_of_batch": {
+                field.removesuffix("_ms"): 100
+                * sum(r.get(field, 0) for r in self.rows)
+                / totals
+                for field in fields
+                if field != "total_batch_ms" and not field.startswith("cpu_")
+            }
+            if totals
+            else {},
+            "unattributed_percent": max(
+                0.0,
+                100
+                * (
+                    totals
+                    - sum(
+                        sum(
+                            value
+                            for key, value in row.items()
+                            if key.endswith("_ms")
+                            and key != "total_batch_ms"
+                            and not key.startswith("cpu_")
+                        )
+                        for row in self.rows
+                    )
+                )
+                / totals,
+            )
+            if totals
+            else None,
             "stages": {
                 field: statistics([r[field] for r in self.rows if field in r])
                 for field in fields

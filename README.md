@@ -97,3 +97,5 @@ Inspect `last.pt` without loading plants using `scripts/inspect_pointnet2_checkp
 ### Phase 3C — controlled scheduler Run 3
 
 Run 3 returns to Run 1's unaugmented setup and changes only validation-mIoU ReduceLROnPlateau scheduling. See [the exact policy, checkpoint semantics, Colab commands, and comparison table](docs/phase3c_run3_scheduler.md). Real Run 3 results are pending; test stays excluded.
+
+Phase 3P throughput continuation adds complete-window operator/SA/FPS summaries, an identity-checked loader/transfer/cache matrix, and `scripts/benchmark_pointnet2_throughput.py` for disposable batch-size comparisons. See [the T4 measurement commands and reporting table](docs/phase3p_training_performance.md#phase-3p-continuation--measured-pipeline-and-compute-comparisons). Scientific defaults remain unchanged; no T4 speedup or optimized preset is claimed.

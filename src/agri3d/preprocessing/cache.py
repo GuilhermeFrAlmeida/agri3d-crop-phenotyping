@@ -16,7 +16,7 @@ from agri3d.preprocessing.filtering import CloudFilter
 from agri3d.preprocessing.labels import decode_maizefield3d_labels
 from agri3d.preprocessing.normalization import CloudNormalizer
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 
 
 def sha256_file(path):
@@ -57,9 +57,11 @@ class NormalizedCloudCache:
         self.pipeline_hash = pipeline_fingerprint()
         self.boundary_fingerprint = boundary_fingerprint
 
-    def identity(self, source):
+    def identity(self, source, sample_identity=None):
         return {
             "cache_version": CACHE_VERSION,
+            "sample_identity": sample_identity,
+            "storage": "uncompressed_npz",
             "source_file": str(Path(source).resolve()),
             "source_sha256": sha256_file(source),
             "pipeline_sha256": self.pipeline_hash,
@@ -71,14 +73,15 @@ class NormalizedCloudCache:
             "normalization": "centroid_unit_sphere_float32",
         }
 
-    def get(self, source, produce):
+    def get(self, source, produce, sample_identity=None):
         identity = self.identity(
-            source
+            source, sample_identity
         )  # Full bytes checked every access, not only mtime/size.
         encoded = json.dumps(identity, sort_keys=True)
         key = hashlib.sha256(encoded.encode()).hexdigest()
         destination = self.directory / f"{key}.npz"
-        if destination.exists():
+        self.last_hit = destination.exists()
+        if self.last_hit:
             try:
                 with np.load(destination, allow_pickle=False) as data:
                     if str(data["identity"]) != encoded:
@@ -121,7 +124,7 @@ class NormalizedCloudCache:
                 dir=self.directory, suffix=".npz", delete=False
             ) as stream:
                 temporary = Path(stream.name)
-                np.savez_compressed(stream, **arrays)
+                np.savez(stream, **arrays)
             os.replace(
                 temporary, destination
             )  # Concurrent workers may populate the same identical key.
