@@ -26,6 +26,7 @@ from .checkpoints import (
 )
 from .dataset import SegmentationDataset
 from .engine import run_epoch
+from .scheduling import SchedulerConfig, scheduler_summary
 from .splits import validate_manifest
 
 
@@ -41,6 +42,7 @@ class RunConfig:
     overfit_samples: int = 0
     model: dict = field(default_factory=dict)
     augmentation: dict = field(default_factory=dict)
+    scheduler: dict = field(default_factory=dict)
 
     def validate(self):
         if any(
@@ -64,6 +66,11 @@ class RunConfig:
         if not 0 <= self.seed < 2**32:
             raise ValueError("Invalid seed")
         PointNet2Config(**self.model)
+        scheduler = SchedulerConfig.from_settings(self.scheduler)
+        if scheduler.enabled and scheduler.min_lr > self.lr:
+            raise ValueError("scheduler.min_lr must not exceed initial LR")
+        if self.overfit_samples and scheduler.enabled:
+            raise ValueError("Tiny-overfit requires disabled scheduler")
         augmentation = AugmentationConfig.from_settings(self.augmentation)
         if self.overfit_samples and augmentation.enabled:
             raise ValueError(
@@ -98,7 +105,7 @@ def experiment_contract(config: RunConfig, manifest_hash: str) -> dict:
     """Data/model invariants required for gate validation and comparable evaluation."""
     # Normalize tuples/lists so YAML and checkpoint configurations compare identically.
     model = json.loads(json.dumps(PointNet2Config(**config.model).to_dict()))
-    return {
+    contract = {
         "manifest_sha256": manifest_hash,
         "points": config.points,
         "seed": config.seed,
@@ -115,6 +122,11 @@ def experiment_contract(config: RunConfig, manifest_hash: str) -> dict:
             config.augmentation
         ).contract(),
     }
+    scheduler = SchedulerConfig.from_settings(config.scheduler)
+    # Keep disabled contracts byte-compatible with pre-scheduler runs.
+    if scheduler.enabled:
+        contract["scheduler"] = scheduler.contract()
+    return contract
 
 
 def make_dataset(
@@ -173,9 +185,10 @@ def verify_overfit_gate(checkpoint: dict, contract: dict) -> None:
         "overfit_status", {}
     ).get("passed"):
         raise ValueError("Regular training requires a passing tiny-overfit checkpoint")
-    # Only this gate permits an augmentation difference. The gate itself must
-    # remain unaugmented and match every other data/model/optimizer invariant.
+    # The fixed memorization gate has neither augmentation nor scheduling.
+    # All remaining data/model/optimizer invariants must match.
     expected = {**contract, "augmentation": None}
+    expected.pop("scheduler", None)
     verify_checkpoint_contract(
         checkpoint,
         expected,
@@ -196,7 +209,11 @@ def verify_checkpoint_contract(checkpoint: dict, expected: dict, message: str) -
         raise ValueError(message)
     saved_hash = checkpoint.get("contract_sha256")
     # Historical unaugmented checkpoints predate the hash. Run 2 requires it.
-    if saved_hash is None and expected.get("augmentation") is None:
+    if (
+        saved_hash is None
+        and expected.get("augmentation") is None
+        and "scheduler" not in expected
+    ):
         return
     if saved_hash != contract_sha256(expected):
         raise ValueError("Checkpoint contract SHA256 is missing or inconsistent")
@@ -311,11 +328,16 @@ def train(
     )
     model = PointNet2Segmentation(PointNet2Config(**config.model)).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
+    scheduler = SchedulerConfig.from_settings(config.scheduler).build(optimizer)
     history, start_epoch, best_miou, best_loss = [], 0, -1.0, float("inf")
     initial_metrics = None
     if resumed:
         model.load_state_dict(resumed["model_state"])
         optimizer.load_state_dict(resumed["optimizer_state"])
+        if scheduler is not None:
+            if not isinstance(resumed.get("scheduler_state"), dict):
+                raise ValueError("Scheduled resume requires scheduler_state")
+            scheduler.load_state_dict(resumed["scheduler_state"])
         history, start_epoch = resumed["history"], resumed["epoch"]
         best_miou, best_loss = resumed["best_miou"], resumed["best_loss"]
         initial_metrics = resumed["initial_metrics"]
@@ -349,6 +371,7 @@ def train(
     }
     write_json(output / "run.json", run_info)
     for epoch in range(start_epoch, config.epochs):
+        epoch_lr = optimizer.param_groups[0]["lr"]
         training.set_epoch(0 if mode == "tiny_overfit" else epoch)
         train_metrics = run_epoch(
             model,
@@ -372,6 +395,10 @@ def train(
             else None
         )
         selection = selected_metrics["mIoU"]
+        # Exactly once, after validation; next epoch uses any reduced LR.
+        if scheduler is not None:
+            scheduler.step(selection)
+        next_lr = optimizer.param_groups[0]["lr"]
         improved = selection > best_miou or (
             selection == best_miou and selected_metrics["loss"] < best_loss
         )
@@ -379,6 +406,10 @@ def train(
             best_miou, best_loss = selection, selected_metrics["loss"]
         record = {
             "epoch": epoch + 1,
+            "lr": epoch_lr,
+            "next_lr": next_lr,
+            "lr_changed": next_lr != epoch_lr,
+            "scheduler": scheduler_summary(scheduler),
             "train": train_metrics,
             "train_eval" if mode == "tiny_overfit" else "val": selected_metrics,
             "overfit_status": status,
@@ -391,6 +422,9 @@ def train(
             "epoch": epoch + 1,
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict()
+            if scheduler is not None
+            else None,
             "best_miou": best_miou,
             "best_loss": best_loss,
             "selection_metric": "train_mIoU" if mode == "tiny_overfit" else "val_mIoU",
@@ -409,7 +443,18 @@ def train(
             save_checkpoint(output / "overfit_passed.pt", payload)
         write_json(output / "metrics.json", history)
         print(json.dumps(record, allow_nan=False), flush=True)
+    metric_key = "train_eval" if mode == "tiny_overfit" else "val"
+    selected_record = max(
+        history, key=lambda row: (row[metric_key]["mIoU"], -row[metric_key]["loss"])
+    )
     summary = {
+        "best_epoch": selected_record["epoch"],
+        "lr_at_best_epoch": selected_record.get("lr"),
+        "final_lr": optimizer.param_groups[0]["lr"],
+        "lr_reduction_epochs": [
+            row["epoch"] for row in history if row.get("lr_changed")
+        ],
+        "scheduler": scheduler_summary(scheduler),
         "mode": mode,
         "epochs_completed": config.epochs,
         "best_mIoU": best_miou,

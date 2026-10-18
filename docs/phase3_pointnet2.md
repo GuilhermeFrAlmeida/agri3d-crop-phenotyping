@@ -183,3 +183,7 @@ Use [the Run 2 workflow](phase3b_run2_augmentation.md) and `configs/pointnet2_ru
 ## Phase 3P: recovery and training performance
 
 [Phase 3P](phase3p_training_performance.md) adds dataset-free checkpoint inspection, short train/val torch/Nsight profiling, opt-in detailed timing/VRAM telemetry, loader benchmarks, and a provenance-checked local normalized-cloud cache. The Run 2 YAML/scientific contract and default recovery behavior remain unchanged. It includes the exact interrupted-Run-2 continuation command and CPU-only findings; no Colab GPU speedup is claimed.
+
+## Phase 3C: Run 3 plateau scheduling
+
+[Run 3](phase3c_run3_scheduler.md) uses Run 1's no-augmentation setup plus ReduceLROnPlateau on validation mIoU. Full scheduler policy/state is checkpointed and checked on resume; unscheduled Run 1/2 remain compatible. Separate artifacts: `artifacts/pointnet2_run3_scheduler`. No real Run 3 result or test evaluation is claimed.

@@ -93,3 +93,7 @@ Use `scripts/analyze_pointnet2.py` with Run 1's `best.pt` and the unchanged froz
 ### Phase 3P — checkpoint recovery and performance
 
 Inspect `last.pt` without loading plants using `scripts/inspect_pointnet2_checkpoint.py`. Use bounded train/val workloads in `scripts/profile_pointnet2.py`, optional `scripts/nsys_pointnet2.py`, and loader/cache/geometry benchmark CLIs before choosing infrastructure options. Existing Run 2 defaults and scientific settings remain unchanged. See [the exact recovery command, Colab profiling commands, measured CPU findings, and limitations](docs/phase3p_training_performance.md).
+
+### Phase 3C — controlled scheduler Run 3
+
+Run 3 returns to Run 1's unaugmented setup and changes only validation-mIoU ReduceLROnPlateau scheduling. See [the exact policy, checkpoint semantics, Colab commands, and comparison table](docs/phase3c_run3_scheduler.md). Real Run 3 results are pending; test stays excluded.
