@@ -44,7 +44,7 @@ def main():
     allowed = {f.name for f in fields(RunConfig)}
     if set(settings) - allowed:
         parser.error(f"Unknown configuration fields: {sorted(set(settings) - allowed)}")
-    for name in allowed - {"model", "augmentation"}:
+    for name in allowed - {"model", "augmentation", "scheduler"}:
         value = getattr(args, name, None)
         if value is not None:
             settings[name] = value

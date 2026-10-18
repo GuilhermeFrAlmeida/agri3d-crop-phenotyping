@@ -61,6 +61,14 @@ def inspect_checkpoint(path, recent=10):
         "recent_validation_trajectory": trajectory[-recent:]
         if mode == "regular"
         else [],
+        "scheduler_contract": contract.get("scheduler"),
+        "scheduler_state": checkpoint.get("scheduler_state"),
+        "lr_reduction_epochs": [
+            row["epoch"] for row in history if row.get("lr_changed")
+        ],
+        "lr_at_best_epoch": next(
+            (row.get("lr") for row in history if row.get("epoch") == best), None
+        ),
         "augmentation_contract": contract.get("augmentation"),
         "manifest_sha256": contract.get("manifest_sha256"),
         "model_configuration": contract.get("model", config.get("model")),
