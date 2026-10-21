@@ -6,9 +6,9 @@ Explicit local surface orientation may help distinguish maize stalk and leaf poi
 
 | Frozen-validation reference | Run 1 | Run 2 | Run 3 | Run 4 |
 |---|---:|---:|---:|---:|
-| mIoU | 0.8366027 | 0.8295737 | 0.8317226 | pending |
-| Leaf IoU | 0.9202424 | 0.9198950 | — | pending |
-| Stalk IoU | 0.7529630 | 0.7392524 | — | pending |
+| mIoU | 0.8366027 | 0.8295737 | 0.8317225588 | pending |
+| Leaf IoU | 0.9202424 | 0.9198950 | 0.918582 | pending |
+| Stalk IoU | 0.7529630 | 0.7392524 | 0.744863 | pending |
 | Stalk precision | 0.8521421 | 0.8828109 | — | pending |
 | Stalk recall | 0.8661208 | 0.8196907 | — | pending |
 
@@ -102,9 +102,9 @@ python -m pytest -q
 Use this variable block and the relevant command in the **same `%%bash` cell**, since shell variables do not persist across cells:
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-ARTIFACTS=/content/drive/MyDrive/Agri3D/artifacts
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+ARTIFACTS="<ARTIFACT_DIR>"
 NORMAL_CACHE=/content/agri3d_run4_normal_cache
 CONFIG=configs/pointnet2_run4_normals.yaml
 
@@ -124,9 +124,9 @@ Inspect the audit, particularly degeneracy counts. Use new output filenames for 
 **Run 4 requires a new passing tiny-overfit gate.** Run 1's XYZ gate is not sufficient because features and input dimensions changed. The existing deterministic 2–8 training-plant mechanism and criteria remain: loss ≤20% of initial, accuracy ≥0.98, mIoU ≥0.95. Use four fixed plants below. Its 200-epoch memorization budget is a separate engineering gate, not Run 4's 100-epoch regular experiment. Augmentation and scheduling remain disabled.
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-ARTIFACTS=/content/drive/MyDrive/Agri3D/artifacts
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+ARTIFACTS="<ARTIFACT_DIR>"
 NORMAL_CACHE=/content/agri3d_run4_normal_cache
 CONFIG=configs/pointnet2_run4_normals.yaml
 
@@ -139,12 +139,12 @@ python scripts/train_pointnet2.py \
   --output-dir "$ARTIFACTS/pointnet2_run4_normals_overfit"
 ```
 
-Review the gate's `summary.json` and confirm `overfit_passed.pt` exists. That file is written only when the existing criteria pass; no real normals-gate pass is claimed from Work. The regular run below verifies its feature/data/model contract before loading train/val clouds:
+Review the gate's `summary.json` and confirm `overfit_passed.pt` exists. That file is written only when the existing criteria pass; no real normals-gate pass is claimed yet. The regular run below verifies its feature/data/model contract before loading train/val clouds:
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-ARTIFACTS=/content/drive/MyDrive/Agri3D/artifacts
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+ARTIFACTS="<ARTIFACT_DIR>"
 NORMAL_CACHE=/content/agri3d_run4_normal_cache
 CONFIG=configs/pointnet2_run4_normals.yaml
 
@@ -158,21 +158,21 @@ python scripts/train_pointnet2.py \
   --output-dir "$ARTIFACTS/pointnet2_run4_normals"
 ```
 
-The user-qualified T4 runtime is workers 2, pinning true, nonblocking true, prefetch 2, persistence **false** (default; do not pass `--persistent-workers`). Cache is optional and is explicitly enabled above to avoid repeated full-cloud estimation. The scientific YAML retains Run 1's worker default so its only block change is features; CLI overrides are recorded in run metadata (`num_workers` remains a legacy RunConfig execution field excluded from the experiment hash), and the existing worker-count equality check on resume remains in force. GPU/worker execution must be verified in Colab where unavailable in Work.
+The qualified T4 runtime is workers 2, pinning true, nonblocking true, prefetch 2, persistence **false** (default; do not pass `--persistent-workers`). Cache is optional and is explicitly enabled above to avoid repeated full-cloud estimation. The scientific YAML retains Run 1's worker default so its only block change is features; CLI overrides are recorded in run metadata (`num_workers` remains a legacy RunConfig execution field excluded from the experiment hash), and the existing worker-count equality check on resume remains in force. Confirm GPU/worker execution in the target runtime before interpreting Run 4.
 
 Validate the selected checkpoint on validation only:
 
 ```bash
 python scripts/validate_pointnet2.py \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run4_normals/best.pt \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run4_normals/best.pt" \
   --device cuda --num-workers 2 \
-  --output /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run4_normals/validation.json
+  --output "<ARTIFACT_DIR>/pointnet2_run4_normals/validation.json"
 ```
 
 Validation/analysis reconstruct the same full-cloud feature policy from the checkpoint. Their existing CLI does not accept cache flags, so validation currently recomputes normals; training, auditing, and Phase 3P benchmarks can reuse the cache.
 
 ## Decision criteria
 
-Primary: validation mIoU > **0.8366027**. Secondary: stalk IoU > **0.7529630**, leaf IoU near/above **0.92024**, and inspect stalk precision/recall balance. Keep Run 1 as champion unless real Run 4 evidence supports replacement. Single-seed validation comparisons do not establish statistical significance or untouched-test performance. No additional scientific variant, test evaluation, or real GPU run is performed in Work.
+Primary: validation mIoU > **0.8366027**. Secondary: stalk IoU > **0.7529630**, leaf IoU near/above **0.92024**, and inspect stalk precision/recall balance. Keep Run 1 as champion unless real Run 4 evidence supports replacement. Single-seed validation comparisons do not establish statistical significance or untouched-test performance. No additional scientific variant or test evaluation is performed in this phase.

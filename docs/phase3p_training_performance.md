@@ -1,12 +1,14 @@
 # Phase 3P — recovery, profiling, and Colab efficiency
 
+> **Phase record:** the early sections document recovery and profiling as implemented. Run 2 has since completed; later T4 observations and throughput measurements are recorded in the Phase 3P continuation below and summarized in [performance](performance.md).
+
 ## Purpose and scientific boundary
 
-Run 2 was interrupted around epoch 70 by Colab runtime limits while validation mIoU was still improving. Phase 3P provides recovery inspection and bounded measurements to decide where GPU time goes. It is infrastructure work within the existing Phase 3 plan, not another scientific experiment or an augmentation result.
+Run 2 was interrupted around epoch 70 by Colab runtime limits while validation mIoU was still improving; it was later completed. This phase added recovery inspection and bounded measurements to profile GPU workloads. It is infrastructure work, not another scientific experiment.
 
 The official Run 2 YAML is unchanged: frozen plant split 364/78/78, 10k XYZ points, PointNet++ SSG, batch 2, Adam LR 0.001, seed 42, Z rotation, scale [0.95, 1.05], jitter σ=0.005/clip=0.02, masked unweighted loss, 100 total epochs, and validation-mIoU selection. Deterministic algorithms, disabled cuDNN benchmark, and disabled TF32 remain unchanged. No test PLY is loaded by profiling or benchmarking. No architecture/kernel replacement, AMP, class weighting, scheduler, or early stopping is enabled.
 
-Resume Run 2 independently first. Pull Phase 3P for separate short profiling workloads, select infrastructure changes only after measuring, finish Run 2, then compare augmentation against Run 1. Do not profile concurrently with training on the same GPU: contention invalidates throughput measurements. A disposable profiling process never saves weights or optimizer state back into the experiment.
+The recovery instructions below preserve the historical Run 2 workflow. Do not profile concurrently with training on the same GPU: contention invalidates throughput measurements. A disposable profiling process never saves weights or optimizer state back into the experiment.
 
 ## Exact Run 2 recovery
 
@@ -15,8 +17,8 @@ PyTorch `.pt` files contain recovery state; a TensorFlow `.pb` is not used. `las
 ```bash
 python scripts/train_pointnet2.py \
   --config configs/pointnet2_run2_aug.yaml \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
   --points 10000 \
   --epochs 100 \
   --batch-size 2 \
@@ -24,8 +26,8 @@ python scripts/train_pointnet2.py \
   --seed 42 \
   --num-workers 0 \
   --device cuda \
-  --resume /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug/last.pt \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+  --resume "<ARTIFACT_DIR>/pointnet2_run2_aug/last.pt" \
+  --output-dir "<ARTIFACT_DIR>/pointnet2_run2_aug"
 ```
 
 `--epochs 100` means total target, not 100 extra epochs. If inspection says completed epoch 70, the next completed epoch is 71. Interrupted work inside an unsaved epoch is repeated; no minibatch-level recovery is claimed. Resuming needs no `--overfit-checkpoint`: gate evidence is already in the checkpoint. Existing format/contract hashes are preserved. Keep the same hardware/software for strongest reproducibility; the contract does not promise bitwise equality across different PyTorch/CUDA implementations.
@@ -36,9 +38,9 @@ Historical Run 1 and Run 2 checkpoints without Phase 3P runtime metadata remain 
 
 ```bash
 python scripts/inspect_pointnet2_checkpoint.py \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug/last.pt \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run2_aug/last.pt" \
   --recent 10 \
-  --output /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug/checkpoint_inspection.json
+  --output "<ARTIFACT_DIR>/pointnet2_run2_aug/checkpoint_inspection.json"
 ```
 
 This loads tensors on CPU using the restricted weights-only loader. It does not import Dataset/model modules, need a manifest/root, start CUDA training, or alter the checkpoint. Loading a full checkpoint still needs CPU RAM for its optimizer/history.
@@ -57,9 +59,9 @@ python -m pytest -q
 For the commands below, put the variable block and command in the same Colab `%%bash` cell (shell variables do not persist across cells):
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-RUN2=/content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+RUN2="<ARTIFACT_DIR>/pointnet2_run2_aug"
 
 python scripts/profile_pointnet2.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -101,9 +103,9 @@ python scripts/nsys_pointnet2.py
 The helper reports version/path when available or exits cleanly with an unavailable status and torch-profiler fallback. To run a tiny workload on a runtime where `nsys` exists:
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-RUN2=/content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+RUN2="<ARTIFACT_DIR>/pointnet2_run2_aug"
 
 python scripts/nsys_pointnet2.py --run --report /content/phase3p/nsys_run2 -- \
   --config configs/pointnet2_run2_aug.yaml \
@@ -112,13 +114,13 @@ python scripts/nsys_pointnet2.py --run --report /content/phase3p/nsys_run2 -- \
   --output-dir /content/phase3p/nsys_workload
 ```
 
-The helper fixes warmup=1 and measured batches=2, uses CUDA/NVTX/OS-runtime tracing, and writes `.nsys-rep` (or the installed version's equivalent) at the report prefix. It invokes `--nvtx-only`, disabling torch's profiler to avoid competing CUPTI activity subscribers. Thus the workload directory has summary/text metadata but no torch `trace.json`; inspect the external Nsight report. Missing installation is nonfatal; an installed but unsupported/permitted profiler reports its own failure, and torch profiling remains the fallback. This path was not GPU-tested in Work.
+The helper fixes warmup=1 and measured batches=2, uses CUDA/NVTX/OS-runtime tracing, and writes `.nsys-rep` (or the installed version's equivalent) at the report prefix. It invokes `--nvtx-only`, disabling torch's profiler to avoid competing CUPTI activity subscribers. Thus the workload directory has summary/text metadata but no torch `trace.json`; inspect the external Nsight report. Missing installation is nonfatal; an installed but unsupported/permitted profiler reports its own failure, and torch profiling remains the fallback. This optional Nsight path has not been verified on the recorded T4 runtime.
 
 ## DataLoader and transfer matrix
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
 
 python scripts/benchmark_pointnet2_data.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -132,7 +134,7 @@ python scripts/benchmark_pointnet2_data.py \
 
 Training/profile CLIs accept `--pin-memory`, `--prefetch-factor N`, `--persistent-workers`, `--non-blocking`, `--cache-dir`, `--detailed-timing`, and `--telemetry`. Defaults preserve the previous loader: no pinning, PyTorch's default prefetch for workers, recreated workers, blocking `.to`, no cache/debug timing/telemetry. Prefetch/persistence require workers >0; benchmark matrices leave those settings inactive for workers 0. Pinned memory without a CUDA accelerator is reported as ineffective, not a successful optimization.
 
-Persistent workers use a shared epoch value so workers receive Dataset epoch updates. A loader shim consumes the same per-iterator base-seed generator draw as recreated workers, preserving RandomSampler order and boundary RNG state. Per-sample augmentation remains independent of worker RNG. Tests include a real spawn/persistence parity check; the Work environment cannot execute that check because Unix sockets are prohibited. Confirm it in CI/Colab before opting into persistence. Never use persistence to bypass the existing Run 2 worker-count resume check.
+Persistent workers use a shared epoch value so workers receive Dataset epoch updates. A loader shim consumes the same per-iterator base-seed generator draw as recreated workers, preserving RandomSampler order and boundary RNG state. Per-sample augmentation remains independent of worker RNG. Tests include a real spawn/persistence parity check; some local environments cannot execute that check because Unix sockets are unavailable. Confirm it in CI/Colab before opting into persistence. Never use persistence to bypass the existing Run 2 worker-count resume check.
 
 ## Optional normalized-cloud cache
 
@@ -143,8 +145,8 @@ Identity includes source resolved path and **full byte SHA256**, preprocessing i
 This is a conservative prototype, not a guaranteed speedup: checksum reads and NPZ loading/checksum work can outweigh preprocessing savings, especially for small or fast binary PLYs. It does not eliminate all source I/O. Copy PLYs to local Colab storage first; keep cache on `/content`, not Drive. Local cache is disposable after runtime loss. Different source/pipeline/library provenance creates new entries; old entries can be removed manually when not in use.
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
 
 python scripts/benchmark_pointnet2_data.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -233,15 +235,15 @@ CPU tests cover dataset-free inspector behavior, history selection, bounded/read
 | `docs/phase3_pointnet2.md` | Phase 3P navigation |
 | `README.md` | Performance tooling entry point |
 
-No scientific Run 2 result is changed by this implementation. Resume, measure short workloads, retain default infrastructure until evidence supports explicit equivalent options, complete Run 2, and then compare augmentation effects. Test remains untouched.
+No scientific Run 2 result is changed by this infrastructure work. Run 2 is complete and its validation comparison is recorded in [results](results.md). Test remains untouched.
 
 ## Phase 3P continuation — measured pipeline and compute comparisons
 
 ### Evidence boundary and current T4 recommendation
 
-The following are **user-reported real Colab observations**, not measurements from Work: Tesla T4, peak allocated ≈325 MB, peak reserved ≈359 MB, batch 2, late Run 2 train epochs ≈136–140 seconds and validation ≈26 seconds. Train throughput is therefore approximately 2.60–2.68 plants/s (364 plants), and validation throughput ≈3.00 plants/s (78 plants). Low allocated memory indicates VRAM capacity is not presently the constraint. It does not distinguish CPU data wait, Python/kernel-launch overhead, geometry kernels, or neural compute.
+The following are **recorded real Colab observations**: Tesla T4, peak allocated ≈325 MB, peak reserved ≈359 MB, batch 2, late Run 2 train epochs ≈136–140 seconds and validation ≈26 seconds. Train throughput is therefore approximately 2.60–2.68 plants/s (364 plants), and validation throughput ≈3.00 plants/s (78 plants). Low allocated memory indicates VRAM capacity is not presently the constraint. It does not distinguish CPU data wait, Python/kernel-launch overhead, geometry kernels, or neural compute.
 
-**No highest-impact T4 operator or faster T4 runtime is established by these observations alone.** Keep official scientific configurations and current resumed-run settings unchanged until the commands below provide evidence. In particular, retain the existing `num_workers` on resume; the resume guard still rejects worker-count changes. No `runtime_colab_t4.yaml` claiming an optimized preset is supplied. Candidate settings (workers 2/4, pinning, nonblocking, persistence, local cache) are explicitly benchmarked, never automatically enabled.
+**These observations show that VRAM capacity is not the current constraint; they do not by themselves identify a single dominant T4 operator or establish an end-to-end speedup.** Keep official scientific configurations and current resumed-run settings unchanged until the commands below provide evidence. In particular, retain the existing `num_workers` on resume; the resume guard still rejects worker-count changes. The qualified T4 runtime controls are workers=2, pin_memory=true, non_blocking=true, prefetch_factor=2, persistent_workers=false. Treat this as one qualified execution preset; the available summary does not establish a separate speedup for every individual control. Cache remains optional.
 
 ### Profiler window and operator attribution
 
@@ -260,9 +262,9 @@ Existing logical ranges (`agri3d::fps`, `agri3d::radius_query`, `agri3d::interpo
 Run these in the same Colab `%%bash` cell after pulling `phase3p-throughput-optimization`:
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-RUN2=/content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+RUN2="<ARTIFACT_DIR>/pointnet2_run2_aug"
 
 python scripts/profile_pointnet2.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -285,8 +287,8 @@ The diagnostic `metrics.timing` reports percentage of total batch wall time for 
 ### Full DataLoader/transfer matrix
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
 
 python scripts/benchmark_pointnet2_data.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -303,8 +305,8 @@ After each timed pass, the benchmark compares SHA256 fingerprints of exact sampl
 ### Fresh cache population and warm reads
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
 
 python scripts/benchmark_pointnet2_data.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -327,9 +329,9 @@ Cache identity includes schema/storage version, source bytes SHA256 and resolved
 ### Batch-size throughput benchmark — separate from experiments
 
 ```bash
-MANIFEST=/content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json
-PLY_ROOT=/content/agri3d-crop-phenotyping/data/raw
-RUN2=/content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+MANIFEST="<MANIFEST>"
+PLY_ROOT="<DATA_ROOT>"
+RUN2="<ARTIFACT_DIR>/pointnet2_run2_aug"
 
 python scripts/benchmark_pointnet2_throughput.py \
   --config configs/pointnet2_run2_aug.yaml \
@@ -347,16 +349,19 @@ To measure end-to-end gains from a candidate runtime, repeat this command with `
 
 ### Qualification and reporting table
 
+A separate bounded Tesla T4 throughput benchmark reported **2.58 samples/s at batch 2, 3.58 at batch 4, and 4.28 at batch 8**. The batch-2 full-run epoch observation above is independent. Throughput-only pass estimates are 364 divided by measured samples/s; they are not measured full-epoch durations. Larger batches improve benchmark throughput but change optimizer grouping and BatchNorm statistics. Official experiment batch size remains 2.
+
 | Configuration | batch | samples/s | train epoch est. | peak allocated / reserved VRAM | data wait | forward | backward |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| baseline (reported Colab) | 2 | 2.60–2.68 | 136–140 s observed | ≈325 / 359 MB | pending | pending | pending |
-| workers=2 | 2 | pending | pending | pending | pending | pending | pending |
-| workers=4 | 2 | pending | pending | pending | pending | pending | pending |
-| pin_memory + nonblocking | 2 | pending | pending | pending | pending | pending | pending |
-| cache | 2 | pending | pending | pending | pending | pending | pending |
-| cache+workers | 2 | pending | pending | pending | pending | pending | pending |
-| batch4 benchmark | 4 | pending | pending | pending | pending | pending | pending |
-| batch8 benchmark | 8 | pending | pending | pending | pending | pending | pending |
+| baseline (recorded Colab epoch) | 2 | 2.60–2.68 | 136–140 s observed | ≈325 / 359 MB | not isolated | not isolated | not isolated |
+| qualified runtime preset (workers=2, pinned, nonblocking, prefetch=2) | 2 | not separately reported | not separately reported | not separately reported | not isolated | not isolated | not isolated |
+| workers=4 | 2 | not reported | not reported | not reported | not reported | not reported | not reported |
+| pin_memory + nonblocking | 2 | qualified in preset above; not isolated | — | — | — | — | — |
+| cache | 2 | not reported on T4 | not reported | not reported | not reported | not reported | not reported |
+| cache+workers | 2 | not reported on T4 | not reported | not reported | not reported | not reported | not reported |
+| batch2 throughput benchmark | 2 | 2.58 | ≈141 s estimate, not observed | not reported | not reported | not reported | not reported |
+| batch4 benchmark | 4 | 3.58 | ≈102 s estimate, not observed | not reported | not reported | not reported | not reported |
+| batch8 benchmark | 8 | 4.28 | ≈85 s estimate, not observed | not reported | not reported | not reported | not reported |
 
 Fill samples/s and VRAM from the primary batch-throughput pass, and stage timings from its separate diagnostic pass. Include units and repeat variability. Compare like-for-like checkpoints, software, hardware, warmed state, augmentation, and selected train prefix. A short-window epoch estimate is not an observed epoch duration. Validation ≈26 s is separate from the train estimate.
 
@@ -368,4 +373,4 @@ AMP, TF32, custom kernels, nondeterminism, and official batch-size changes are n
 
 [Compact CPU report](benchmarks/phase3p_pipeline_cpu.json): one CPU thread, generated binary 100k-point clouds, 10k-point live sampling, workers 0, batch 2, three measured loader batches per pass. Application-cache-disabled first-pass loader+transfer throughput was **8.05 plants/s** (repeated pass **7.06**), population **6.95**, and warm reads **10.54**. Median data wait was approximately **252 ms**, **285 ms**, and **190 ms** for the selected first/population/warm passes, respectively. These are short synthetic CPU measurements, not T4 gains, not an uncompressed-vs-compressed comparison, and not a runtime recommendation.
 
-A separate two-batch reduced 256-point model profile on those clouds measured **data wait ≈82.8%** of synchronized batch time, forward ≈9.1%, backward ≈4.3%. Within forward, FPS was ≈20.1%, neighborhood ≈6.0%, interpolation ≈30.8%, and SA/FP MLP ≈28.1% of inclusive CPU time. The **highest-impact measured stage in this synthetic CPU workload is data wait**. Its reduced geometry makes it unsuitable for extrapolating the 10k-point T4 compute balance. The earlier full-size isolated CPU geometry benchmark still measures FPS at ≈255 ms for B=2, N=10,000, S=1,024, but neither CPU result identifies the T4 critical path. Actual T4 stage/operator results remain required.
+A separate two-batch reduced 256-point model profile on those clouds measured **data wait ≈82.8%** of synchronized batch time, forward ≈9.1%, backward ≈4.3%. Within forward, FPS was ≈20.1%, neighborhood ≈6.0%, interpolation ≈30.8%, and SA/FP MLP ≈28.1% of inclusive CPU time. The **highest-impact measured stage in this synthetic CPU workload is data wait**. Its reduced geometry makes it unsuitable for extrapolating the 10k-point T4 compute balance. The earlier full-size isolated CPU geometry benchmark still measures FPS at ≈255 ms for B=2, N=10,000, S=1,024, but neither CPU result identifies the T4 critical path. The recorded T4 observations do not isolate a dominant stage; use the bounded T4 profile for CPU/CUDA attribution before making an operator-level bottleneck claim.

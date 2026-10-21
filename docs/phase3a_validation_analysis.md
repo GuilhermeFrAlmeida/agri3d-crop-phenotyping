@@ -1,10 +1,12 @@
 # Phase 3A — PointNet++ validation error analysis
 
+> **Historical phase guide:** this document describes the validation-only analysis tooling. Its Run 1 reference metrics remain current; implementation-environment test counts are a phase snapshot.
+
 This phase diagnoses the existing XYZ-only PointNet++ SSG Run 1 checkpoint. It does not train, change the model, change preprocessing, or evaluate test plants. The frozen 364/78/78 plant-level manifest remains the experiment contract.
 
 ## Reference experiment
 
-The following are user-reported Colab results, not measurements produced by implementing this tooling. Run 1 selected epoch 76 with validation accuracy 0.9358397, mIoU 0.8366027, leaf IoU 0.9202424, stalk IoU 0.7529630, stalk precision 0.8521421, and stalk recall 0.8661208. The geometric validation baseline had mIoU 0.6229862, leaf IoU 0.8173371, and stalk IoU 0.4286353.
+The following are recorded Colab results, not measurements produced by implementing this tooling. Run 1 selected epoch 76 with validation accuracy 0.9358397, mIoU 0.8366027, leaf IoU 0.9202424, stalk IoU 0.7529630, stalk precision 0.8521421, and stalk recall 0.8661208. The geometric validation baseline had mIoU 0.6229862, leaf IoU 0.8173371, and stalk IoU 0.4286353.
 
 The question now is where performance varies among the 78 validation plants. The next experiment should follow this analysis, rather than an architecture or hyperparameter change made in advance.
 
@@ -17,11 +19,11 @@ python -m pip install -e '.[dev,geometry,analysis]'
 python -m pytest -q
 
 python scripts/analyze_pointnet2.py \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run1/best.pt \
-  --metadata /content/drive/MyDrive/Agri3D/data/Metadata.xlsx \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run1/validation_analysis \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run1/best.pt" \
+  --metadata "<METADATA_XLSX>" \
+  --output-dir "<ARTIFACT_DIR>/pointnet2_run1/validation_analysis" \
   --device cuda --num-workers 0 --top-k 5 \
   --visualize --save-predictions
 ```

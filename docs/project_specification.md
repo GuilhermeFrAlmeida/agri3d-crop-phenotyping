@@ -1,3 +1,5 @@
+> **Historical target specification:** this initial planning document describes proposed capabilities, not the current implementation. The current status is in the [roadmap](roadmap.md), and current implemented architecture is in [architecture](architecture.md). REST API deployment, full instance reconstruction, and production latency in this file are not completed or measured.
+
 # Agri3D System Specification & Engineering Contract
 
 ## 1. System Objective
