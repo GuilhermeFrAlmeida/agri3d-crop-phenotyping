@@ -1,0 +1,22 @@
+# Run 4: Run 1 training policy plus full-cloud estimated normal features only.
+points: 10000
+epochs: 100
+batch_size: 2
+lr: 0.001
+seed: 42
+num_workers: 0
+device: auto
+overfit_samples: 0
+model:
+  npoints: [1024, 256, 64, 16]
+  radii: [0.1, 0.2, 0.4, 0.8]
+  nsamples: [32, 32, 32, 32]
+  chunk_size: 128
+features:
+  mode: xyz_normals
+  normals:
+    source: estimated
+    method: knn_pca
+    k: 32
+    orientation: deterministic
+    policy_version: 1

@@ -117,18 +117,23 @@ class FeaturePropagation(nn.Module):
 
 
 class PointNet2Segmentation(nn.Module):
-    """Input float32 (B,N,3) normalized XYZ -> unnormalized logits (B,N,2).
+    """Float32 normalized XYZ and optional separate features -> (B,N,2) logits.
 
-    No RGB/normals, augmentation or dropout. Requires >=2 points per cloud for
+    XYZ-only construction preserves legacy weights; Run 4 supplies estimated normals. Requires >=2 points per cloud for
     BatchNorm's final propagation stage during batch-size-one training.
     Padding consists of duplicate XYZ; it participates in model context but
     must be excluded from the objective/metrics using the Dataset valid_mask.
     """
 
-    def __init__(self, config: PointNet2Config | None = None):
+    def __init__(
+        self, config: PointNet2Config | None = None, feature_channels: int = 0
+    ):
         super().__init__()
         self.config = config or PointNet2Config()
-        channels = (0, 64, 128, 256)
+        if type(feature_channels) is not int or feature_channels < 0:
+            raise ValueError("feature_channels must be a nonnegative integer")
+        self.feature_channels = feature_channels
+        channels = (feature_channels, 64, 128, 256)
         widths = ((32, 32, 64), (64, 64, 128), (128, 128, 256), (256, 256, 512))
         self.abstraction = nn.ModuleList(
             [
@@ -147,14 +152,17 @@ class PointNet2Segmentation(nn.Module):
                 FeaturePropagation(768, (256, 256), self.config.chunk_size),
                 FeaturePropagation(384, (256, 256), self.config.chunk_size),
                 FeaturePropagation(320, (256, 128), self.config.chunk_size),
-                FeaturePropagation(131, (128, 128, 128), self.config.chunk_size),
+                FeaturePropagation(
+                    131 + feature_channels, (128, 128, 128), self.config.chunk_size
+                ),
             ]
         )
         self.classifier = nn.Sequential(
             shared_mlp(128, (128,), 1), nn.Conv1d(128, 2, 1)
         )
 
-    def forward(self, xyz: Tensor) -> Tensor:
+    def forward(self, xyz: Tensor, features: Tensor | None = None) -> Tensor:
+        point_features = features
         check_xyz(xyz)
         if xyz.dtype != torch.float32:
             raise TypeError("PointNet++ expects float32 XYZ")
@@ -162,7 +170,21 @@ class PointNet2Segmentation(nn.Module):
             raise ValueError("PointNet++ requires at least two input points")
         if not torch.isfinite(xyz).all():
             raise ValueError("PointNet++ input must be finite")
-        coords, features = [xyz], [None]
+        if self.feature_channels:
+            if point_features is None or point_features.shape != (
+                *xyz.shape[:2],
+                self.feature_channels,
+            ):
+                raise ValueError(
+                    "Point features must align with XYZ and configured feature channels"
+                )
+            if point_features.dtype != xyz.dtype or point_features.device != xyz.device:
+                raise ValueError("Point features require same dtype/device as XYZ")
+            if not torch.isfinite(point_features).all():
+                raise ValueError("Point features must be finite")
+        elif point_features is not None:
+            raise ValueError("XYZ-only model does not accept point features")
+        coords, features = [xyz], [point_features]
         for stage in self.abstraction:
             next_xyz, next_features = stage(coords[-1], features[-1])
             coords.append(next_xyz)
@@ -170,6 +192,14 @@ class PointNet2Segmentation(nn.Module):
         propagated = features[-1]
         for i, stage in enumerate(self.propagation):
             level = 3 - i
-            skip = xyz if level == 0 else features[level]
+            skip = (
+                (
+                    xyz
+                    if point_features is None
+                    else torch.cat([xyz, point_features], -1)
+                )
+                if level == 0
+                else features[level]
+            )
             propagated = stage(coords[level], coords[level + 1], skip, propagated)
         return self.classifier(propagated.transpose(1, 2)).transpose(1, 2).contiguous()

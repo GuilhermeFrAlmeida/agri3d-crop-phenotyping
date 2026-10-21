@@ -99,3 +99,7 @@ Inspect `last.pt` without loading plants using `scripts/inspect_pointnet2_checkp
 Run 3 returns to Run 1's unaugmented setup and changes only validation-mIoU ReduceLROnPlateau scheduling. See [the exact policy, checkpoint semantics, Colab commands, and comparison table](docs/phase3c_run3_scheduler.md). Real Run 3 results are pending; test stays excluded.
 
 Phase 3P throughput continuation adds complete-window operator/SA/FPS summaries, an identity-checked loader/transfer/cache matrix, and `scripts/benchmark_pointnet2_throughput.py` for disposable batch-size comparisons. See [the T4 measurement commands and reporting table](docs/phase3p_training_performance.md#phase-3p-continuation--measured-pipeline-and-compute-comparisons). Scientific defaults remain unchanged; no T4 speedup or optimized preset is claimed.
+
+### Phase 3D — Run 4 estimated surface normals
+
+`configs/pointnet2_run4_normals.yaml` returns to Run 1's training policy and adds deterministic full-cloud kNN-PCA normals as separate point features. RGB remains supervision only. A new normals-compatible tiny-overfit gate is required. See [the exact policy, audit, cache, parameter change, and Colab commands](docs/phase3d_run4_normals.md). No real Run 4 result is claimed.

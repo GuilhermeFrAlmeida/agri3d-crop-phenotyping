@@ -33,6 +33,8 @@ def batch_fingerprint(batch):
         digest.update(str(tensor.dtype).encode())
         digest.update(str(tuple(tensor.shape)).encode())
         digest.update(tensor.numpy().tobytes())
+    if "features" in batch:
+        digest.update(batch["features"].detach().cpu().contiguous().numpy().tobytes())
     return digest.hexdigest()
 
 
@@ -141,7 +143,12 @@ def benchmark_loaders(
                             startup_ms = (time.perf_counter() - started) * 1000
                             for _ in range(warmup_batches):
                                 batch = next(iterator)
-                                for key in ("points", "labels", "valid_mask"):
+                                for key in (
+                                    "points",
+                                    "labels",
+                                    "valid_mask",
+                                    *(["features"] if "features" in batch else []),
+                                ):
                                     batch[key].to(device, non_blocking=blocking)
                             timer = BatchTimings(device, True)
                             retained = []
@@ -153,7 +160,16 @@ def benchmark_loaders(
                                 with timer.stage("h2d"):
                                     transferred = [
                                         batch[key].to(device, non_blocking=blocking)
-                                        for key in ("points", "labels", "valid_mask")
+                                        for key in (
+                                            "points",
+                                            "labels",
+                                            "valid_mask",
+                                            *(
+                                                ["features"]
+                                                if "features" in batch
+                                                else []
+                                            ),
+                                        )
                                     ]
                                 del transferred
                                 timer.finish(batch)

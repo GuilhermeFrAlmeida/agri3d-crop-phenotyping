@@ -51,15 +51,25 @@ def payload_hash(xyz, attributes, metadata):
 
 
 class NormalizedCloudCache:
-    def __init__(self, directory, boundary_fingerprint=None):
+    def __init__(
+        self,
+        directory,
+        boundary_fingerprint=None,
+        feature_provenance=None,
+        feature_contract="xyz",
+    ):
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True)
         self.pipeline_hash = pipeline_fingerprint()
         self.boundary_fingerprint = boundary_fingerprint
+        self.feature_provenance = feature_provenance
+        self.feature_contract = feature_contract
 
     def identity(self, source, sample_identity=None):
         return {
             "cache_version": CACHE_VERSION,
+            "features": self.feature_contract,
+            "feature_provenance": self.feature_provenance,
             "sample_identity": sample_identity,
             "storage": "uncompressed_npz",
             "source_file": str(Path(source).resolve()),

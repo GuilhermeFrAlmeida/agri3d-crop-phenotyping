@@ -16,6 +16,8 @@ from agri3d.models import PointNet2Config, PointNet2Segmentation
 from agri3d.performance.runtime import RuntimeOptions, build_loader
 from agri3d.performance.timing import telemetry
 from agri3d.preprocessing.augmentation import AugmentationConfig
+from agri3d.preprocessing.features import FeatureConfig
+from agri3d.preprocessing.normals import NormalConfig, normal_provenance
 
 from .checkpoints import (
     capture_rng,
@@ -43,6 +45,7 @@ class RunConfig:
     model: dict = field(default_factory=dict)
     augmentation: dict = field(default_factory=dict)
     scheduler: dict = field(default_factory=dict)
+    features: dict = field(default_factory=dict)
 
     def validate(self):
         if any(
@@ -71,11 +74,24 @@ class RunConfig:
             raise ValueError("scheduler.min_lr must not exceed initial LR")
         if self.overfit_samples and scheduler.enabled:
             raise ValueError("Tiny-overfit requires disabled scheduler")
+        features = FeatureConfig.from_settings(self.features)
         augmentation = AugmentationConfig.from_settings(self.augmentation)
+        if features.channels and (augmentation.enabled or scheduler.enabled):
+            raise ValueError(
+                "Run 4 normal features require disabled augmentation and scheduler"
+            )
         if self.overfit_samples and augmentation.enabled:
             raise ValueError(
                 "Tiny-overfit requires disabled augmentation; use the Run 1 configuration"
             )
+
+
+def build_model(config):
+    """Only feature-dependent input dimensions change; geometry always stays XYZ."""
+    return PointNet2Segmentation(
+        PointNet2Config(**config.model),
+        feature_channels=FeatureConfig.from_settings(config.features).channels,
+    )
 
 
 def select_device(name: str) -> torch.device:
@@ -113,7 +129,7 @@ def experiment_contract(config: RunConfig, manifest_hash: str) -> dict:
         "optimizer": {"name": "Adam", "lr": config.lr},
         "model": model,
         "annotation_mode": "maizefield3d",
-        "features": "xyz",
+        "features": FeatureConfig.from_settings(config.features).contract(),
         "classes": {"0": "leaf", "1": "stalk"},
         "sampling": "voxel",
         "voxel_size_normalized": 0.005,
@@ -144,6 +160,7 @@ def make_dataset(
         annotation_mode="maizefield3d",
         sor=False,
         augmentation=config.augmentation,
+        features=config.features,
         cache_dir=runtime.cache_dir,
         profile_data=runtime.detailed_timing,
     )
@@ -208,11 +225,12 @@ def verify_checkpoint_contract(checkpoint: dict, expected: dict, message: str) -
     if checkpoint.get("contract") != expected:
         raise ValueError(message)
     saved_hash = checkpoint.get("contract_sha256")
-    # Historical unaugmented checkpoints predate the hash. Run 2 requires it.
+    # Historical XYZ-only checkpoints predate the hash; newer feature policies require it.
     if (
         saved_hash is None
         and expected.get("augmentation") is None
         and "scheduler" not in expected
+        and expected.get("features", "xyz") == "xyz"
     ):
         return
     if saved_hash != contract_sha256(expected):
@@ -326,7 +344,7 @@ def train(
         eval_rng,
         runtime,
     )
-    model = PointNet2Segmentation(PointNet2Config(**config.model)).to(device)
+    model = build_model(config).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
     scheduler = SchedulerConfig.from_settings(config.scheduler).build(optimizer)
     history, start_epoch, best_miou, best_loss = [], 0, -1.0, float("inf")
@@ -365,6 +383,17 @@ def train(
             s: sum(r["split"] == s for r in records) for s in ("train", "val", "test")
         },
         "parameters": sum(p.numel() for p in model.parameters()),
+        "point_feature_channels": model.feature_channels,
+        "feature_provenance": normal_provenance(
+            NormalConfig.from_settings(config.features.get("normals"))
+        )
+        if model.feature_channels
+        else None,
+        "parameters_added_by_point_features": model.feature_channels
+        * (
+            model.abstraction[0].mlp[0].out_channels
+            + model.propagation[-1].mlp[0].out_channels
+        ),
         "environment": environment(device),
         "gate_evidence": gate_evidence,
         "scope": "fixed sampled points; no full-cloud projection; no test evaluation",
@@ -498,7 +527,7 @@ def validate_checkpoint(
     loader = make_loader(
         dataset, config, False, torch.Generator().manual_seed(config.seed + 1)
     )
-    model = PointNet2Segmentation(PointNet2Config(**config.model)).to(device)
+    model = build_model(config).to(device)
     model.load_state_dict(checkpoint["model_state"])
     result = {
         "split": "val",
