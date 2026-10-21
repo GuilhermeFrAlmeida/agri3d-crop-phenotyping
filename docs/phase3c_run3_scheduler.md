@@ -6,21 +6,21 @@ A constant Adam LR of 0.001 may be too aggressive late in training. Run 3 tests 
 
 Run 2 augmentation did not improve aggregate validation performance: stalk precision increased while recall decreased. Run 1 remains the champion. Run 3 therefore returns to **Run 1's unaugmented setup**, starting from the original seed, not from Run 1/2 trained weights. Its only scientific change is ReduceLROnPlateau. Both earlier runs peaked before epoch 100; reported late instability motivates this controlled experiment.
 
-User-reported frozen-validation references:
+Frozen-validation references:
 
 | Metric | Run 1 | Run 2 | Run 3 |
 |---|---:|---:|---:|
-| Selected epoch | 76 | 93 | pending |
-| Accuracy | 0.9358397 | 0.9347205 | pending |
-| mIoU | 0.8366027 | 0.8295737 | pending |
-| Leaf IoU | 0.9202424 | 0.9198950 | pending |
-| Stalk IoU | 0.7529630 | 0.7392524 | pending |
-| Stalk precision | 0.8521421 | 0.8828109 | pending |
-| Stalk recall | 0.8661208 | 0.8196907 | pending |
-| Train mIoU at selected epoch | 0.924027 | not supplied | pending |
-| LR used at selected epoch | 0.001 | 0.001 | pending |
-| Final LR | 0.001 | 0.001 | pending |
-| LR reduction epochs | none | none | pending |
+| Selected epoch | 76 | 93 | 99 |
+| Accuracy | 0.9358397 | 0.9347205 | Not in the recorded result summary |
+| mIoU | 0.8366027 | 0.8295737 | 0.8317225588 |
+| Leaf IoU | 0.9202424 | 0.9198950 | 0.918582 |
+| Stalk IoU | 0.7529630 | 0.7392524 | 0.744863 |
+| Stalk precision | 0.8521421 | 0.8828109 | Not in the recorded result summary |
+| Stalk recall | 0.8661208 | 0.8196907 | Not in the recorded result summary |
+| Train mIoU at selected epoch | 0.924027 | Not supplied | Not in the recorded result summary |
+| LR used at selected epoch | 0.001 | 0.001 | Not in the recorded result summary |
+| Final LR | 0.001 | 0.001 | Not in the recorded result summary |
+| LR reduction epochs | none | none | Not in the recorded result summary |
 
 ## Exact contract
 
@@ -71,8 +71,8 @@ python -m pytest -q
 
 python scripts/train_pointnet2.py \
   --config configs/pointnet2_run3_scheduler.yaml \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
   --points 10000 \
   --epochs 100 \
   --batch-size 2 \
@@ -80,21 +80,21 @@ python scripts/train_pointnet2.py \
   --seed 42 \
   --num-workers 0 \
   --device cuda \
-  --overfit-checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit/overfit_passed.pt \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run3_scheduler
+  --overfit-checkpoint "<ARTIFACT_DIR>/pointnet2_overfit/overfit_passed.pt" \
+  --output-dir "<ARTIFACT_DIR>/pointnet2_run3_scheduler"
 ```
 
 Use a new/empty Run 3 directory. Preserve all prior artifacts. Then evaluate the selected checkpoint on validation only:
 
 ```bash
 python scripts/validate_pointnet2.py \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run3_scheduler/best.pt \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run3_scheduler/best.pt" \
   --device cuda --num-workers 0 \
-  --output /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run3_scheduler/validation.json
+  --output "<ARTIFACT_DIR>/pointnet2_run3_scheduler/validation.json"
 ```
 
 ## Interpretation
 
-Primary success: validation mIoU > Run 1's 0.8366027. Secondary: preserve/improve stalk IoU, avoid meaningful leaf degradation, and reduce late validation instability. Compare a fixed late window (e.g. epochs 81–100) using mIoU standard deviation/range for each run; report these alongside selected-checkpoint metrics, not as substitutes for them. A single seed on a repeatedly examined validation set does not establish statistical significance or test-set generalization. Keep test unopened. No Run 3 result or scheduler success is claimed until the real Colab experiment is completed. Do not add further scientific variants within this run.
+Primary success: validation mIoU > Run 1's 0.8366027. Secondary: preserve/improve stalk IoU, avoid meaningful leaf degradation, and reduce late validation instability. Compare a fixed late window (e.g. epochs 81–100) using mIoU standard deviation/range for each run; report these alongside selected-checkpoint metrics, not as substitutes for them. A single seed on a repeatedly examined validation set does not establish statistical significance or test-set generalization. Keep test unopened. Run 3 is complete and did not surpass Run 1; see the results registry. Test remains excluded. Do not add further scientific variants within this run.

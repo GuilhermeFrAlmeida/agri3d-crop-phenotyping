@@ -1,5 +1,7 @@
 # Phase 3 — XYZ-only PointNet++ semantic baseline
 
+> **Historical phase guide:** Run 1 remains the current reference, but Runs 2–4 have since been completed or started. See [results](results.md) and [experiments](experiments.md) for current status.
+
 ## Experiment contract
 
 Use the existing `maizefield3d_manifest_seed42.json` unchanged: 364 train, 78 validation, 78 test plants grouped by plant identity, seed 42. This repository change does not create or modify a split file. The runner validates the entire manifest for duplicate identities/group leakage, records its exact-byte SHA-256, and opens only the selected train/validation PLYs. Test records may be listed in the manifest, but test files are never required or evaluated by the new scripts.
@@ -46,7 +48,7 @@ python -m pytest -q
 
 Colab already provides a CUDA-enabled PyTorch build. Do not replace it with a CPU wheel. For a CPU-only local environment, install a CPU Torch build before installing this package. In a Colab notebook execute these commands in a `%%bash` cell after `%cd /content/agri3d-crop-phenotyping`.
 
-The examples below assume the frozen manifest is saved at the shown Drive path and that its relative `path` entries resolve under `/content/agri3d-crop-phenotyping/data/raw`. Change these two locations to match your actual mounted files; do not regenerate or rewrite the manifest to change a root directory.
+The examples use generic placeholders for the externally stored manifest and data root. Replace them with your local paths; do not regenerate or rewrite the manifest to change the root directory.
 
 ## Mandatory tiny-overfit experiment
 
@@ -56,12 +58,12 @@ Run this as a `%%bash` cell in Colab:
 set -e
 python scripts/train_pointnet2.py \
   --config configs/pointnet2.yaml \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
   --points 10000 --epochs 200 --batch-size 2 --lr 0.001 \
   --seed 42 --num-workers 0 --device cuda \
   --overfit-samples 4 \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit
+  --output-dir "<ARTIFACT_DIR>/pointnet2_overfit"
 ```
 
 The subset is drawn deterministically from sorted training sample IDs. It contains no validation/test plants. The same four plants and the same sampled points (Dataset epoch 0) are used throughout; there is no augmentation. `run.json` records their IDs and the initial eval-mode loss. Each epoch logs both online training metrics (`train`) and a post-update eval-mode pass on those same training points (`train_eval`). This latter pass catches train/eval discrepancies, including BatchNorm running statistics.
@@ -71,7 +73,7 @@ Inspect the result in a Python cell:
 ```python
 import json
 from pathlib import Path
-run = Path('/content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit')
+run = Path("<ARTIFACT_DIR>/pointnet2_overfit")
 print(json.loads((run / 'summary.json').read_text()))
 history = json.loads((run / 'metrics.json').read_text())
 print(history[-1]['train_eval'])
@@ -83,7 +85,7 @@ Passing criteria on the fixed training subset: loss <=20% of its initial value, 
 Resume an interrupted tiny run from the same output directory using the same command/config plus:
 
 ```bash
---resume /content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit/last.pt
+--resume "<ARTIFACT_DIR>/pointnet2_overfit/last.pt"
 ```
 
 `--epochs` specifies total epochs, not additional epochs. Use a larger total when continuing a completed run. A new run refuses to overwrite a nonempty output directory.
@@ -95,12 +97,12 @@ Only after inspecting the tiny-overfit results:
 ```bash
 python scripts/train_pointnet2.py \
   --config configs/pointnet2.yaml \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
   --points 10000 --epochs 100 --batch-size 2 --lr 0.001 \
   --seed 42 --num-workers 0 --device cuda \
-  --overfit-checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit/overfit_passed.pt \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run1
+  --overfit-checkpoint "<ARTIFACT_DIR>/pointnet2_overfit/overfit_passed.pt" \
+  --output-dir "<ARTIFACT_DIR>/pointnet2_run1"
 ```
 
 The passing checkpoint is evidence of the smoke check; the full model starts from a fresh seeded initialization. Regular training resamples train points by epoch and keeps validation points fixed. The gate requires matching manifest hash, model geometry settings, point count, seed, batch size, learning rate and data preprocessing contract. It does not carry over tiny-overfit weights.
@@ -111,11 +113,11 @@ The passing checkpoint is evidence of the smoke check; the full model starts fro
 
 ```bash
 python scripts/validate_pointnet2.py \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run1/best.pt \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run1/best.pt" \
   --device cuda --num-workers 0 \
-  --output /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run1/validation.json
+  --output "<ARTIFACT_DIR>/pointnet2_run1/validation.json"
 ```
 
 This command loads model/data settings from the checkpoint and only exposes validation. The manifest must match the saved hash. All scores concern fixed sampled points, **not full-cloud projected segmentation**. Keep the point count, sampling seed and manifest identical to the geometric baseline for comparison. No test-set evaluation is implemented for Phase 3 development.
@@ -138,7 +140,7 @@ Default `num_workers=0` matches the verified Colab setup. Worker processes, when
 
 ## Targets and limitations
 
-User-reported geometric baseline on the frozen 78-plant validation split at 10k points:
+Recorded geometric baseline on the frozen 78-plant validation split at 10k points:
 
 | Metric | Geometry | Initial PointNet++ target |
 |---|---:|---:|
@@ -155,13 +157,13 @@ These neural targets are not measured results or guarantees. Plant-identity grou
 
 - **FPS:** Python iterates 1024+256+64+16 centroid selections. It is O(B*N*S) and likely to be a GPU kernel-launch bottleneck. It stores linear-size working arrays, not N×N distances.
 - **Neighborhoods:** search is chunked (128 query points). At B=2,N=10000 one largest distance tensor is `2×128×10000` float32, about 9.8 MiB. Temporary arithmetic buffers and saved activations add memory; this is not a peak-VRAM estimate. SA1 grouping/MLPs and final dense FP activations are also significant allocations.
-- **Interpolation:** chunked queries avoid a full 10000×1024 allocation. Feature gathers still retain training activations. GPU memory/throughput have not been benchmarked; batch 2 is a conservative starting choice, not a certified Colab capacity guarantee. If batch 1 is needed, rerun the tiny gate with that same batch setting.
+- **Interpolation:** chunked queries avoid a full 10000×1024 allocation. Feature gathers still retain training activations. Later bounded T4 profiling measured VRAM and batch throughput; this early implementation note does not attribute the full GPU bottleneck. Batch 2 remains the scientific setting. If batch 1 is needed, rerun the tiny gate with that same batch setting.
 - **I/O:** each Dataset access reads and processes the full 100k PLY before sampling. This can dominate time, especially from Drive. Copy PLYs to Colab local storage while keeping manifest identity and output artifacts persistent.
 - **BatchNorm:** small subsets and severely sparse/near-empty local neighborhoods can show low train loss yet poor or unstable eval behavior. The synthetic stress check exposed this, so the gate uses eval-mode train metrics. Keep the first real tiny-overfit at 10k points and allow running statistics to settle. Do not bypass the gate using train-mode scores.
 - **Padding:** repeated padding points affect feature context/BatchNorm, but do not contribute directly to loss or metrics. Real validated 100k→10k clouds do not need padding. Degenerate undersized clouds are not evidence of equivalent training behavior.
 - **Provenance:** checkpoint hashes identify the manifest, not the PLY byte content. Preserve the pinned dataset revision and immutable extracted files externally. No dataset files or frozen split were regenerated here.
 
-The implementation is ready for `pull commit → tests → real tiny-overfit → inspect → first regular run`. Remaining empirical gates are Colab CUDA execution/VRAM and the real-data tiny-overfit. No real PointNet++ MaizeField3D metrics have been produced in this workspace.
+At the time of this initial implementation note, Colab CUDA and real-data overfit checks were still open. Runs 1–3 have since been measured. Consult current [results](results.md) and [performance](performance.md); Run 4 remains in progress.
 
 ## Implementation verification and repository review
 
@@ -174,7 +176,7 @@ The implementation is ready for `pull commit → tests → real tiny-overfit →
 
 ## Phase 3A: diagnose Run 1 validation errors
 
-Run 1's user-reported best epoch 76 achieved validation mIoU 0.8366027, leaf IoU 0.9202424, and stalk IoU 0.7529630. Before changing model/training choices, run the validation-only [Phase 3A analysis workflow](phase3a_validation_analysis.md). It adds per-plant metrics, exact Tagname metadata joins, descriptive associations, and optional comparable GT/prediction/error views. The existing validator and checkpoint semantics remain unchanged; test remains excluded.
+Run 1's recorded best epoch 76 achieved validation mIoU 0.8366027, leaf IoU 0.9202424, and stalk IoU 0.7529630. Before changing model/training choices, run the validation-only [Phase 3A analysis workflow](phase3a_validation_analysis.md). It adds per-plant metrics, exact Tagname metadata joins, descriptive associations, and optional comparable GT/prediction/error views. The existing validator and checkpoint semantics remain unchanged; test remains excluded.
 
 ## Phase 3B: one controlled augmentation experiment
 
@@ -182,11 +184,11 @@ Use [the Run 2 workflow](phase3b_run2_augmentation.md) and `configs/pointnet2_ru
 
 ## Phase 3P: recovery and training performance
 
-[Phase 3P](phase3p_training_performance.md) adds dataset-free checkpoint inspection, short train/val torch/Nsight profiling, opt-in detailed timing/VRAM telemetry, loader benchmarks, and a provenance-checked local normalized-cloud cache. The Run 2 YAML/scientific contract and default recovery behavior remain unchanged. It includes the exact interrupted-Run-2 continuation command and CPU-only findings; no Colab GPU speedup is claimed.
+[Phase 3P](phase3p_training_performance.md) adds dataset-free checkpoint inspection, short train/val torch/Nsight profiling, opt-in detailed timing/VRAM telemetry, loader benchmarks, and a provenance-checked local normalized-cloud cache. The Run 2 YAML/scientific contract remains unchanged. Phase 3P also records T4 memory/epoch observations and bounded batch-throughput results; see the current [performance summary](performance.md) for the evidence limits.
 
 ## Phase 3C: Run 3 plateau scheduling
 
-[Run 3](phase3c_run3_scheduler.md) uses Run 1's no-augmentation setup plus ReduceLROnPlateau on validation mIoU. Full scheduler policy/state is checkpointed and checked on resume; unscheduled Run 1/2 remain compatible. Separate artifacts: `artifacts/pointnet2_run3_scheduler`. No real Run 3 result or test evaluation is claimed.
+[Run 3](phase3c_run3_scheduler.md) uses Run 1's no-augmentation setup plus ReduceLROnPlateau on validation mIoU. Full scheduler policy/state is checkpointed and checked on resume; unscheduled Run 1/2 remain compatible. Separate artifacts: `artifacts/pointnet2_run3_scheduler`. Run 3 is complete; its validation result is recorded in the project results registry. Test evaluation remains out of scope.
 
 ## Phase 3D: Run 4 normal features
 

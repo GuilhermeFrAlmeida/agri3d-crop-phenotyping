@@ -2,7 +2,7 @@
 
 ## Hypothesis and scope
 
-Phase 3A's user-reported validation analysis found more variability in stalk IoU than leaf IoU, essentially no association with GT stalk ratio, a weak negative size association, and both stalk false-negative and false-positive failure modes. Run 2 tests whether mild geometry augmentation improves geometric robustness/generalization. It is one policy, not an augmentation sweep, and introduces no class weighting.
+Phase 3A validation analysis found more variability in stalk IoU than leaf IoU, essentially no association with GT stalk ratio, a weak negative size association, and both stalk false-negative and false-positive failure modes. Run 2 tests whether mild geometry augmentation improves geometric robustness/generalization. It is one policy, not an augmentation sweep, and introduces no class weighting.
 
 The only experimental change from Run 1 is training augmentation. Keep the frozen plant-identity manifest (364 train / 78 val / 78 test), seed 42, XYZ-only 10,000 points, PointNet++ SSG geometry/width/depth, batch 2, Adam LR 0.001, 100 epochs, masked unweighted cross-entropy, no SOR, no scheduler, no dropout, no RGB/normals, and selection by validation mIoU (existing loss tie-break). Test remains inaccessible through all Phase 3 development CLIs. Run 2 initializes fresh seeded weights; it does not resume or warm-start Run 1 or the tiny-overfit model.
 
@@ -64,12 +64,12 @@ Adjust only file locations below to match your existing manifest, local PLY root
 ```bash
 python scripts/train_pointnet2.py \
   --config configs/pointnet2_run2_aug.yaml \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
   --points 10000 --epochs 100 --batch-size 2 --lr 0.001 \
   --seed 42 --num-workers 0 --device cuda \
-  --overfit-checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_overfit/overfit_passed.pt \
-  --output-dir /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug
+  --overfit-checkpoint "<ARTIFACT_DIR>/pointnet2_overfit/overfit_passed.pt" \
+  --output-dir "<ARTIFACT_DIR>/pointnet2_run2_aug"
 ```
 
 If interrupted, supply the same YAML/arguments and `--resume .../pointnet2_run2_aug/last.pt`; epochs is the total target. Resume requires the same output directory and restores optimizer, loader/global RNG, and history. Do not use a Run 1 checkpoint to resume Run 2.
@@ -78,30 +78,30 @@ Validate selected weights only on frozen validation:
 
 ```bash
 python scripts/validate_pointnet2.py \
-  --manifest /content/drive/MyDrive/Agri3D/data/splits/maizefield3d_manifest_seed42.json \
-  --root /content/agri3d-crop-phenotyping/data/raw \
-  --checkpoint /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug/best.pt \
+  --manifest "<MANIFEST>" \
+  --root "<DATA_ROOT>" \
+  --checkpoint "<ARTIFACT_DIR>/pointnet2_run2_aug/best.pt" \
   --device cuda --num-workers 0 \
-  --output /content/drive/MyDrive/Agri3D/artifacts/pointnet2_run2_aug/validation.json
+  --output "<ARTIFACT_DIR>/pointnet2_run2_aug/validation.json"
 ```
 
 For plant-level comparison, use the unchanged Phase 3A analysis command with Run 2 `best.pt` and a new `.../pointnet2_run2_aug/validation_analysis` output directory. The saved augmentation policy is verified but never applied to those validation samples. No test split option is added.
 
-## Compare after the run
+## Recorded Run 2 result
 
 | Metric at selected checkpoint | Run 1 reference | Run 2 |
 |---|---:|---:|
-| Best epoch | 76 | Pending |
-| Validation accuracy | 0.9358397 | Pending |
-| Validation mIoU | 0.8366027 | Pending |
-| Leaf IoU | 0.9202424 | Pending |
-| Stalk IoU | 0.7529630 | Pending |
-| Stalk precision | 0.8521421 | Pending |
-| Stalk recall | 0.8661208 | Pending |
-| Logged training mIoU at best epoch | 0.92403 | Pending |
-| Logged train–validation mIoU gap | ~0.0874 | Pending |
+| Best epoch | 76 | 93 |
+| Validation accuracy | 0.9358397 | 0.9347205 |
+| Validation mIoU | 0.8366027 | 0.8295737 |
+| Leaf IoU | 0.9202424 | 0.9198950 |
+| Stalk IoU | 0.7529630 | 0.7392524 |
+| Stalk precision | 0.8521421 | 0.8828109 |
+| Stalk recall | 0.8661208 | 0.8196907 |
+| Logged training mIoU at best epoch | 0.92403 | Not in the recorded result summary |
+| Logged train–validation mIoU gap | ~0.0874 | Not in the recorded result summary |
 
-References are user-reported Colab results, not new measurements here. Read `best.pt`'s epoch and the same epoch in `metrics.json`, rather than mixing best validation with last-epoch training metrics. The selected checkpoint's validation values are the primary comparison. Prefer higher validation mIoU, ideally higher stalk IoU without a significant leaf degradation. Reuse Phase 3A per-plant analysis to inspect whether both false-positive and false-negative modes improve.
+These are recorded Colab results. Run 2 did not improve aggregate performance: stalk precision increased while stalk recall, stalk IoU and mIoU decreased. See the project results registry for the current comparison.
 
 **Gap interpretation:** Run 2's logged training metrics are online/train-mode scores on augmented inputs; Run 1's are on unaugmented inputs. Therefore a smaller logged gap can partly reflect harder training inputs, not improved generalization. Do not treat gap reduction alone as success; establish it with the unchanged validation metrics first. This implementation does not add a separate clean-train evaluation experiment. A small single-seed gain is preliminary evidence, not proof of statistical consistency; do not silently launch extra variants or touch test to resolve it.
 
@@ -111,4 +111,4 @@ Artifacts follow the existing layout: `run.json` (config/contract/hash/gate prov
 
 Tests isolate Z rotation distances/Z invariance, scale factors/range, clipped jitter, copied source data/metadata, exact label/mask/source-index preservation, duplicate padding, seed/epoch repeatability, changed training epochs, unaugmented validation, disabled Run 1 sampling parity, config equality outside augmentation, legacy checkpoints, gate compatibility, augmented contract/hash failures, and exact synthetic CPU checkpoint/resume. Synthetic Run 2 validation also matches the existing validator/Phase 3A analysis.
 
-No real Run 2 training or metrics are produced in Work. The environment has CPU PyTorch and no provided real dataset/GPU. Remaining checks are the real Colab launch, completion, best-checkpoint validation, and comparison against Run 1. The existing FPS/neighborhood/PLY-I/O bottlenecks remain; augmentation adds small CPU coordinate-copy/transform costs after sampling. No architecture, optimizer, class weighting, scheduler, sampling density, or additional augmentation variants are introduced.
+Run 2 was completed on the recorded Colab setup. The local synthetic tests validate software behavior; the recorded real-data comparison is summarized above and in the project results registry. The existing FPS/neighborhood/PLY-I/O bottlenecks remain; augmentation adds small CPU coordinate-copy/transform costs after sampling. No architecture, optimizer, class weighting, scheduler, sampling density, or additional augmentation variants are introduced.

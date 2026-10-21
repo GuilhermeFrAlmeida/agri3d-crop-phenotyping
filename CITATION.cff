@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Agri3D: 3D Crop Perception and Phenotyping"
+type: software
+authors:
+  - family-names: Frutuoso
+    given-names: Guilherme
+repository-code: "https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping"
+license: Apache-2.0

@@ -916,7 +916,7 @@ That is the project I'd be comfortable putting on a CV/GitHub as an **end-to-end
 
 I think this is a better scope than trying to make one dataset do everything.
 
-[1]: https://pmc.ncbi.nlm.nih.gov/articles/PMC13109309/?utm_source=chatgpt.com "MaizeField3D: A curated 3D point cloud and procedural model dataset of field-grown maize from a diversity panel - PMC"
+[1]: https://pmc.ncbi.nlm.nih.gov/articles/PMC13109309/ "MaizeField3D: A curated 3D point cloud and procedural model dataset of field-grown maize from a diversity panel - PMC"
 [2]: https://huggingface.co/datasets/BGLab/MaizeField3D "BGLab/MaizeField3D · Datasets at Hugging Face"
 [3]: https://baskargroup.github.io/MaizeField3D/ "MaizeField3D"
 [4]: https://github.com/RAL-UC/Pullally_Dataset "GitHub - RAL-UC/Pullally_Dataset: Contains the lidar scans and GNSS measurements captures at the Pullally (Chile) experimental fruit orchard. · GitHub"
