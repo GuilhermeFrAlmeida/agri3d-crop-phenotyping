@@ -7,7 +7,6 @@ from pathlib import Path
 
 import torch
 
-from agri3d.models import PointNet2Config, PointNet2Segmentation
 from agri3d.preprocessing.cache import sha256_file
 from agri3d.training.checkpoints import (
     capture_rng,
@@ -17,6 +16,7 @@ from agri3d.training.checkpoints import (
 )
 from agri3d.training.engine import run_epoch
 from agri3d.training.pointnet2_runner import (
+    build_model,
     environment,
     experiment_contract,
     make_dataset,
@@ -93,7 +93,7 @@ def benchmark_batch_sizes(
             )
             if cfg.num_workers:
                 loader.timeout = 30
-            model = PointNet2Segmentation(PointNet2Config(**cfg.model)).to(device)
+            model = build_model(cfg).to(device)
             if checkpoint:
                 model.load_state_dict(checkpoint["model_state"])
             optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)

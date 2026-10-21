@@ -61,6 +61,8 @@ def inspect_checkpoint(path, recent=10):
         "recent_validation_trajectory": trajectory[-recent:]
         if mode == "regular"
         else [],
+        "feature_provenance": checkpoint.get("feature_provenance"),
+        "feature_contract": contract.get("features", "xyz"),
         "scheduler_contract": contract.get("scheduler"),
         "scheduler_state": checkpoint.get("scheduler_state"),
         "lr_reduction_epochs": [

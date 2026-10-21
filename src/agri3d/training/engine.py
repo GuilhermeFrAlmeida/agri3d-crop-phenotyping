@@ -44,13 +44,20 @@ def run_epoch(
                 break
             with timer.stage("h2d"):
                 points = batch["points"].to(device, non_blocking=non_blocking)
+                features = (
+                    batch["features"].to(device, non_blocking=non_blocking)
+                    if "features" in batch
+                    else None
+                )
                 labels = batch["labels"].to(device, non_blocking=non_blocking)
                 mask = batch["valid_mask"].to(device, non_blocking=non_blocking)
             with timer.stage("batch_preparation"):
                 if training:
                     optimizer.zero_grad(set_to_none=True)
             with timer.stage("forward"):
-                logits = model(points)
+                logits = (
+                    model(points, features) if features is not None else model(points)
+                )
             with timer.stage("loss"):
                 loss = masked_cross_entropy(logits, labels, mask)
                 if not torch.isfinite(loss):

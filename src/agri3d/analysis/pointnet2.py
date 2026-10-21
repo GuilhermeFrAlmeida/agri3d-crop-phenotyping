@@ -8,12 +8,12 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from agri3d.models import PointNet2Config, PointNet2Segmentation
 from agri3d.training.checkpoints import load_checkpoint, seed_everything
 from agri3d.training.evaluate import SegmentationEvaluator
 from agri3d.training.losses import masked_cross_entropy
 from agri3d.training.pointnet2_runner import (
     RunConfig,
+    build_model,
     environment,
     experiment_contract,
     make_dataset,
@@ -45,7 +45,8 @@ def evaluate_samples(model, loader, device, keep_cases=False):
             points = batch["points"].to(device)
             targets = batch["labels"].to(device)
             mask = batch["valid_mask"].to(device)
-            logits = model(points)
+            features = batch["features"].to(device) if "features" in batch else None
+            logits = model(points, features) if features is not None else model(points)
             loss = masked_cross_entropy(logits, targets, mask)
             if not torch.isfinite(logits).all() or not torch.isfinite(loss):
                 raise FloatingPointError("Nonfinite validation logits/loss")
@@ -77,6 +78,10 @@ def evaluate_samples(model, loader, device, keep_cases=False):
                         "centroid": batch["centroid"][index].cpu().numpy().copy(),
                         "scale": batch["scale"][index].cpu().numpy().copy(),
                     }
+                    if "features" in batch:
+                        cases[sample_id]["features"] = (
+                            batch["features"][index].cpu().numpy().copy()
+                        )
                     chosen = select_visualization_cases(rows)
                     cases = {
                         key: value for key, value in cases.items() if key in chosen
@@ -160,7 +165,7 @@ def analyze_checkpoint(
     loader = make_loader(
         dataset, config, False, torch.Generator().manual_seed(config.seed + 1)
     )
-    model = PointNet2Segmentation(PointNet2Config(**config.model)).to(device)
+    model = build_model(config).to(device)
     model.load_state_dict(checkpoint["model_state"])
     rows, metrics, confusion, cases = evaluate_samples(
         model, loader, device, visualize or save_predictions

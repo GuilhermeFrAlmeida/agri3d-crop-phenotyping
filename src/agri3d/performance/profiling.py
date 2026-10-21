@@ -9,7 +9,6 @@ from pathlib import Path
 
 import torch
 
-from agri3d.models import PointNet2Config, PointNet2Segmentation
 from agri3d.preprocessing.cache import sha256_file
 from agri3d.training.checkpoints import (
     capture_rng,
@@ -20,6 +19,7 @@ from agri3d.training.checkpoints import (
 from agri3d.training.engine import run_epoch
 from agri3d.training.pointnet2_runner import (
     RunConfig,
+    build_model,
     environment,
     experiment_contract,
     make_dataset,
@@ -364,7 +364,7 @@ def profile_workload(
             torch.Generator().manual_seed(config.seed),
             runtime,
         )
-        model = PointNet2Segmentation(PointNet2Config(**config.model))
+        model = build_model(config)
         if checkpoint:
             model.load_state_dict(checkpoint["model_state"])
         profiler, result = profile_model(
