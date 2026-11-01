@@ -1,5 +1,7 @@
 # Public-release audit
 
+> **Historical audit snapshot (2026-10-21):** experiment-state statements below describe that release review. Current Run 4 completion and Phases 4/5 development are tracked in [results](results.md) and [the pipeline guide](phases4_5_phenotyping_pipeline.md).
+
 **Audit basis:** latest `main` at `53af6848a460d60f24c91f07416b872140b1ac1c` (2026-10-21), GitHub API recursive tree and commit listing, all 19 commits in the main ancestry, current tracked-file inventory, source/docs pattern scans, Apache license file, and upstream MaizeField3D dataset card. Repository visibility remains private. This review does not rewrite history or change visibility.
 
 | Check | Status | Evidence / Notes | Action Required |

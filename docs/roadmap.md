@@ -1,30 +1,27 @@
 # Roadmap
 
-Status labels describe implementation state, not a promise of completion dates.
+Status distinguishes implementation from real-data qualification. No production-readiness claim is made.
 
 ## Completed
 
-- PLY loading, finite-point validation and RGB semantic decoding for the segmented MaizeField3D subset.
-- Frozen group-aware plant-identity train/validation/test manifest integration.
-- Geometric validation baseline.
-- PointNet++ SSG XYZ baseline and fixed-point validation.
-- Validation-only per-plant error analysis.
-- Controlled augmentation (Run 2) and validation-mIoU scheduler (Run 3) comparisons.
-- Phase 3P profiler, bounded loader/cache benchmarks and batch-throughput engineering.
-- Run 4 estimated-normal preprocessing/model path, contract checks and normals-compatible tiny-overfit mechanism.
+- Dataset validation, RGB supervision and frozen plant-identity split integration.
+- Geometric baseline and PointNet++ SSG XYZ Run 1, current semantic champion.
+- Validation error analysis and controlled Runs 2/3/4 (augmentation, scheduler, estimated normals), all rejected relative to Run 1.
+- Phase 3P profiling, runtime qualification and bounded throughput tools.
+- Phases 4/5 software: model-neutral inference, canonical `.pt` adapter, full-cloud nearest projection, geometric instance baseline, metric trait methods, artifact writer, visualization, validation harness and synthetic tests.
+- ONNX attempt/qualification tooling with explicit NOT QUALIFIED capture blocker; no portable PointNet++ artifact is qualified.
 
 ## In progress
 
-- Run 4 deterministic kNN-PCA normals audit and tiny-overfit gate on real data.
-- Run 4 full training and validation comparison, pending completion of the gate.
+- Phases 4/5 real MaizeField3D development-data qualification.
+- Independent verification of exact instance palette and quantitative phenotype references.
+- Bounded oracle/predicted structure comparison, then full validation reporting.
 
-## Planned
+## Planned / deferred
 
-- Leaf-instance segmentation and instance reconstruction.
-- Phenotypic trait extraction and validation against references.
-- Evaluation under genotype-held-out and other robustness splits.
-- Cross-dataset validation, including external LiDAR sources.
-- Evaluation of stronger 3D architectures under controlled comparisons.
-- User-facing CLI/API packaging for an end-to-end workflow.
+- Improved touching-leaf splitting, instance reconstruction and trait-reference validation after baseline diagnosis.
+- Stronger 3D architectures only after downstream implementation and evaluation; replace the semantic backend rather than rewriting traits.
+- Robustness/genotype-held-out and cross-dataset/external LiDAR validation.
+- Broader CLI/API packaging and deployment qualification.
 
-Planned items have no completed implementation or result claim in the current repository.
+The frozen test set remains untouched. Planned items have no completed-result claim.

@@ -1,28 +1,28 @@
 # Architecture
 
-Agri3D currently implements the data-to-semantic-segmentation path. Instance reconstruction and phenotypic measurements are downstream directions, not a completed end-to-end feature.
+Agri3D implements semantic training plus a model-neutral inference, full-cloud projection, geometric structure and metric-measurement pipeline. Downstream algorithms are implemented but not yet qualified on real plants. Run 1 is the frozen semantic backend; stronger network experiments are deferred.
 
 ## High-level system
 
 ```mermaid
 flowchart TD
-    A[MaizeField3D segmented PLY] --> B[PLY ingestion]
-    B --> C[Finite filtering and aligned cleaning]
-    C --> D[RGB semantic decode: supervision only]
-    D --> E[Full-cloud normalization]
-    E --> F[Deterministic 10k sampling]
-    F --> G[Optional estimated normals: Run 4]
-    G --> H[PointNet++ SSG]
-    H --> I[Leaf / stalk semantic labels]
-    I --> J[Downstream phenotyping: planned]
+    A[PLY input in meters] --> B[Finite filter and preserve full metric XYZ]
+    B --> C[Full-cloud normalization and deterministic 10k sample]
+    C --> D[SemanticPredictor: frozen Run 1 XYZ]
+    D --> E[Full-cloud nearest projection]
+    E --> F[Geometric leaf instances and metric traits]
+    F --> G[Checksummed artifacts and reports]
+    B --> H[Validation-only RGB supervision decode]
+    H --> I[Separate development evaluation]
+    E --> I
 ```
 
-For Run 4, normals are estimated on cleaned full-resolution XYZ before normalization/sampling. RGB is never passed as model input. See [dataset](dataset.md) and [Phase 3D](phase3d_run4_normals.md).
+RGB is never a model feature. The historical Run 4 normal-feature experiment remains implemented but was rejected and is not the frozen downstream backend. See [dataset](dataset.md), [Phase 3D](phase3d_run4_normals.md), and [Phases 4/5](phases4_5_phenotyping_pipeline.md).
 
 ## Training and checkpoint selection
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Seeded frozen manifest] --> B[Train/val-only Dataset]
     B --> C[Clean, decode, normalize, sample]
     C --> D[DataLoader]
@@ -53,7 +53,7 @@ Geometry operations (farthest-point sampling, radius neighborhoods and interpola
 ## Experiment and reproducibility flow
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Scientific config] --> B[Frozen manifest]
     B --> C[Training run]
     C --> D[Contract-checked checkpoint]
@@ -63,3 +63,16 @@ flowchart LR
 ```
 
 Runtime options such as workers, pinning and cache location are recorded separately from scientific choices. See [reproducibility](reproducibility.md) and [experiments](experiments.md).
+
+## Frozen downstream boundary
+
+```mermaid
+flowchart TD
+    A[InputAdapter and full metric Preprocessor] --> B[SemanticPredictor protocol]
+    B --> C[SemanticProjector: metric nearest neighbor]
+    C --> D[InstanceExtractor: capped radius graph components]
+    D --> E[PhenotypeExtractor: metric geometry only]
+    E --> F[ArtifactWriter: JSON, arrays, scalar PLY, HTML]
+```
+
+Only the backend adapter imports PointNet++ internals. The CLI composes it with downstream modules; the latter do not inspect the architecture. Clean metric coordinates and normalized 10k model coordinates remain separate. RGB is never a model feature. See [Phases 4/5](phases4_5_phenotyping_pipeline.md) and [interoperability](model_interoperability.md) for contract details and current unqualified status.

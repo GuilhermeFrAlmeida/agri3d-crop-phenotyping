@@ -1,16 +1,18 @@
 # Phase 3D — Run 4: estimated surface normals
 
+> **Completed and rejected:** Run 4 validation mIoU 0.8173358; Run 1 remains the frozen semantic baseline. Commands below preserve the historical experiment protocol and do not authorize retraining during Phases 4/5.
+
 ## Hypothesis and experimental boundary
 
-Explicit local surface orientation may help distinguish maize stalk and leaf points that an XYZ-only network must infer implicitly. This is a hypothesis, not a result. Run 1 remains the champion; Run 2 augmentation and Run 3 plateau scheduling did not improve validation mIoU.
+Explicit local surface orientation may help distinguish maize stalk and leaf points that an XYZ-only network must infer implicitly. This was the controlled hypothesis; the completed run did not support promotion over Run 1. Run 1 remains the champion; Run 2 augmentation and Run 3 plateau scheduling did not improve validation mIoU.
 
 | Frozen-validation reference | Run 1 | Run 2 | Run 3 | Run 4 |
 |---|---:|---:|---:|---:|
-| mIoU | 0.8366027 | 0.8295737 | 0.8317225588 | pending |
-| Leaf IoU | 0.9202424 | 0.9198950 | 0.918582 | pending |
-| Stalk IoU | 0.7529630 | 0.7392524 | 0.744863 | pending |
-| Stalk precision | 0.8521421 | 0.8828109 | — | pending |
-| Stalk recall | 0.8661208 | 0.8196907 | — | pending |
+| mIoU | 0.8366027 | 0.8295737 | 0.8317225588 | 0.8173358 |
+| Leaf IoU | 0.9202424 | 0.9198950 | 0.918582 | 0.9085305 |
+| Stalk IoU | 0.7529630 | 0.7392524 | 0.744863 | 0.7261411 |
+| Stalk precision | 0.8521421 | 0.8828109 | — | 0.8194030 |
+| Stalk recall | 0.8661208 | 0.8196907 | — | 0.8644969 |
 
 The Run 4 YAML is identical to Run 1 except for `features`. Frozen manifest 364/78/78; plant grouping; seed 42; 10,000 points; SSG; batch 2; Adam LR 0.001 constant; 100 regular epochs; no augmentation, scheduler, weighting, SOR, AMP, TF32, added dropout, or changed neighborhood/MLP widths. Checkpoint selection retains validation mIoU and the existing lower-loss exact-tie rule. Test files are never loaded.
 
@@ -139,7 +141,7 @@ python scripts/train_pointnet2.py \
   --output-dir "$ARTIFACTS/pointnet2_run4_normals_overfit"
 ```
 
-Review the gate's `summary.json` and confirm `overfit_passed.pt` exists. That file is written only when the existing criteria pass; no real normals-gate pass is claimed yet. The regular run below verifies its feature/data/model contract before loading train/val clouds:
+Review the gate's `summary.json` and confirm `overfit_passed.pt` exists. That file is written only when the existing criteria pass; the gate is part of the historical experiment procedure, not a new run in this phase. The regular run below verifies its feature/data/model contract before loading train/val clouds:
 
 ```bash
 MANIFEST="<MANIFEST>"
