@@ -4,7 +4,7 @@
 
 **3D perception for maize structure segmentation and phenotyping research.**
 
-Agri3D is an engineering and applied-research pipeline for semantic crop-structure segmentation from field-grown maize point clouds. It ingests the segmented 100k MaizeField3D subset, preprocesses plant-level PLY clouds, trains pure-PyTorch PointNet++ SSG, and reports validation metrics on deterministic 10,000-point samples.
+Agri3D is an engineering and applied-research pipeline for semantic crop-structure segmentation from field-grown maize point clouds. It ingests the segmented 100k MaizeField3D subset, preprocesses plant-level PLY clouds, trains pure-PyTorch PointNet++ SSG, reports validation metrics on deterministic 10,000-point samples, and exposes a frozen inference-to-phenotype pipeline.
 
 | At a glance | Current status |
 |---|---|
@@ -12,13 +12,13 @@ Agri3D is an engineering and applied-research pipeline for semantic crop-structu
 | Dataset subset | 520 annotated plants; 100k-point PLY source clouds |
 | Frozen split | 364 train / 78 validation / 78 test; plant identity grouping |
 | Neural input | 10,000 points per plant; XYZ in Runs 1–3, XYZ + estimated normals in Run 4 |
-| Development | Runs 1–3 measured; Run 4 implemented, result pending |
+| Development | Runs 1–4 complete; Run 1 frozen. Phases 4/5 implemented, awaiting real-data qualification |
 
 Pipeline: **PLY → clean and decode RGB supervision → normalize and sample → PointNet++ SSG → leaf/stalk point labels → validation analysis**. Test data remains untouched.
 
 ## Overview
 
-The repository focuses on binary per-point segmentation of **leaf** and **stalk** structures in individual maize plants. It includes deterministic preprocessing, controlled training/validation, per-plant error analysis, profiling and throughput tools. Full-cloud prediction projection, leaf-instance segmentation and final trait extraction are future work.
+The repository focuses on binary per-point segmentation of **leaf** and **stalk** structures in individual maize plants. It includes deterministic preprocessing, controlled training/validation, per-plant error analysis, profiling and throughput tools. A CPU-compatible downstream pipeline now adds full-cloud projection, geometric leaf components and metric-space trait measurements. It is implemented but not yet experimentally qualified.
 
 ## Key results
 
@@ -30,7 +30,7 @@ These are validation metrics on a fixed plant-identity split and fixed sampled p
 | Run 1 | PointNet++ XYZ | **0.836603** | **0.920242** | **0.752963** | Current champion |
 | Run 2 | Geometry-preserving augmentation | 0.829574 | 0.919895 | 0.739252 | Rejected; below Run 1 |
 | Run 3 | ReduceLROnPlateau on validation mIoU | 0.831723 | 0.918582 | 0.744863 | Rejected; below Run 1 |
-| Run 4 | XYZ + estimated surface normals | Pending | Pending | Pending | In progress |
+| Run 4 | XYZ + estimated surface normals | 0.817336 | 0.908530 | 0.726141 | Rejected; below Run 1 |
 
 See [results](docs/results.md) for selected epochs, per-class metrics, interpretation and evidence limits.
 
@@ -39,22 +39,23 @@ See [results](docs/results.md) for selected epochs, per-class metrics, interpret
 The current neural model has four PointNet++ SSG set-abstraction stages (10,000 → 1,024 → 256 → 64 → 16 centroids), feature propagation back to all input points and binary per-point logits. Runs 1–3 use XYZ only. Run 4 passes XYZ as geometry and estimated normals as separate point features; RGB is never a model feature.
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[MaizeField3D segmented PLY] --> B[Finite filtering and RGB label decode]
     B --> C[Normalize and deterministic 10k sampling]
     C --> D[PointNet++ SSG]
     D --> E[Leaf or stalk logits]
-    E --> F[Validation metrics and error analysis]
-    F --> G[Downstream phenotyping: planned]
+    E --> F[Full-cloud semantic projection]
+    F --> G[Metric instances and geometric traits]
+    G --> H[Artifacts and development evaluation]
 ```
 
 See [architecture](docs/architecture.md) for training and model diagrams.
 
 ## Project status
 
-- **Completed and measured:** frozen plant-level split, geometric baseline, PointNet++ XYZ Run 1, validation analysis, Run 2 augmentation comparison, Run 3 scheduler comparison, Phase 3P profiling and throughput work.
-- **In progress:** Run 4 with deterministic kNN-PCA normals. The data/model path and normals-compatible tiny-overfit gate are implemented; a real-data gate pass and full-run result have not been reported.
-- **Planned:** leaf-instance segmentation, plant-trait extraction, external robustness evaluation and broader interfaces.
+- **Completed and measured:** frozen plant-level split, geometric baseline, PointNet++ XYZ Run 1, validation analysis, Run 2 augmentation comparison, Run 3 scheduler and Run 4 normals comparisons, Phase 3P profiling and throughput work.
+- **Implemented, not yet qualified:** Phases 4/5 frozen semantic inference, nearest projection, geometric instances, metric traits, artifacts and validation evaluation. Real MaizeField3D execution is the next gate.
+- **Deferred:** stronger neural architectures until downstream qualification; external robustness evaluation and biological trait-reference validation remain future work.
 
 See the [roadmap](docs/roadmap.md) for the distinction between implemented and future work.
 
@@ -77,7 +78,7 @@ Run 4 estimates kNN-PCA normals on cleaned full-resolution XYZ before normalizat
 
 ## Experiments
 
-The experiment sequence keeps negative comparisons visible. Run 2 tested augmentation and raised stalk precision while reducing recall and mIoU. Run 3 tested validation-mIoU plateau scheduling and did not surpass Run 1. Run 4 tests whether local surface orientation helps separate leaf and stalk. See the [experiment registry](docs/experiments.md).
+The experiment sequence keeps negative comparisons visible. Run 2 tested augmentation and raised stalk precision while reducing recall and mIoU. Run 3 tested validation-mIoU plateau scheduling and did not surpass Run 1. Run 4 tested local surface orientation but also fell below Run 1. PointNet++ experimentation is frozen for downstream engineering. See the [experiment registry](docs/experiments.md).
 
 ## Performance engineering
 
@@ -112,6 +113,17 @@ Tests use synthetic fixtures and do not download or open the dataset split. Data
 
 Neural comparisons use the pinned plant-identity manifest, seed 42, 10,000 sampled points, batch size 2, PointNet++ SSG and validation-mIoU model selection. Do not regenerate the split. Checkpoints include experiment contracts and recovery state; Run 4 also checks feature/normal-policy provenance. See [reproducibility](docs/reproducibility.md) for acquisition, manifest, tiny-overfit gate, training, validation, analysis and resume instructions.
 
+## Frozen semantic inference and phenotyping
+
+```bash
+python -m agri3d.pipeline analyze \
+  --input "<PLANT_PLY>" --checkpoint "<RUN1_BEST_PT>" \
+  --config configs/phenotyping_pipeline.yaml --device cpu \
+  --output "<NEW_PLANT_OUTPUT>" --visualize
+```
+
+The pipeline preserves full metric geometry for height, PCA/graph leaf lengths, convex-hull/voxel canopy measurements and stalk descriptors. Outputs include semantic/instance arrays, scalar-labeled PLY, JSON, optional HTML, timings and checksummed provenance. Geometric components are not yet validated botanical leaf identities. PyTorch `.pt` is canonical; ONNX export is NOT QUALIFIED because modern capture fails at an existing tensor-boolean validation guard. See [Phases 4/5](docs/phases4_5_phenotyping_pipeline.md) and [interoperability](docs/model_interoperability.md).
+
 ## Documentation
 
 - [Index](docs/README.md) · [Architecture](docs/architecture.md) · [Dataset](docs/dataset.md)
@@ -121,7 +133,7 @@ Neural comparisons use the pinned plant-identity manifest, seed 42, 10,000 sampl
 
 ## Roadmap and limitations
 
-Current status and planned directions are listed in the [roadmap](docs/roadmap.md). Results are validation-only, from one seed, on sampled points; test has not been evaluated. The split is not genotype-held-out, and there is no cross-dataset validation, full-cloud projection, leaf-instance segmentation or final trait extraction. See [limitations](docs/limitations.md).
+Current status and planned directions are listed in the [roadmap](docs/roadmap.md). Results are validation-only, from one seed, on sampled points; test has not been evaluated. The split is not genotype-held-out, and there is no cross-dataset or biological-trait validation. Full-cloud projection and geometric instance/trait extraction are implemented with explicit limitations and await real-data qualification. See [limitations](docs/limitations.md).
 
 ## License
 

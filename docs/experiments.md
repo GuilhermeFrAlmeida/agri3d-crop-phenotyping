@@ -10,11 +10,11 @@ The supervised experiments use MaizeField3D segmented 100k, a frozen plant-ident
 | Run 1 | A PointNet++ model can improve over geometry-only rules using XYZ geometry. | First learned baseline; no augmentation or scheduler. | Best epoch 76; validation mIoU 0.8366027; leaf IoU 0.9202424; stalk IoU 0.7529630. | Current champion and reference for later runs. |
 | Run 2 | Mild geometry-preserving augmentation may improve generalization. | Z rotation, isotropic scaling and clipped coordinate jitter only. | Best epoch 93; mIoU 0.8295737; stalk precision rose to 0.8828109, recall fell to 0.8196907, and stalk IoU fell to 0.7392524. | Rejected; aggregate performance below Run 1. |
 | Run 3 | Reducing Adam LR when validation mIoU stalls may improve late training generalization. | ReduceLROnPlateau monitored on validation mIoU only. | Best epoch 99; mIoU 0.8317225588; leaf IoU 0.918582; stalk IoU 0.744863. | Rejected; below Run 1. |
-| Run 4 | Explicit local surface orientation may help separate stalk and leaf. | XYZ plus deterministic full-cloud kNN-PCA estimated normals only. | Implemented; real-data normal audit/overfit gate and full-run result pending. | In progress; no success claim. |
+| Run 4 | Explicit local surface orientation may help separate stalk and leaf. | XYZ plus deterministic full-cloud kNN-PCA estimated normals only. | Validation mIoU 0.8173358; leaf IoU 0.9085305; stalk IoU 0.7261411. | Rejected; Run 1 remains champion. |
 
 ## Interpretation
 
-The geometric baseline establishes a simple non-learned point of comparison. Run 1 is the current champion because it has the strongest validation mIoU and stalk IoU among the measured neural runs. Run 2 traded recall for precision without improving aggregate validation. Run 3 completed the scheduler intervention, but its best mIoU remained below Run 1. Run 4 returns to the Run 1 policy and tests only an added geometric feature; it is not yet a result.
+The geometric baseline establishes a simple non-learned point of comparison. Run 1 is the current champion because it has the strongest validation mIoU and stalk IoU among the measured neural runs. Run 2 traded recall for precision without improving aggregate validation. Run 3 completed the scheduler intervention, but its best mIoU remained below Run 1. Run 4 returned to the Run 1 policy and tested only estimated normal features; its result was also below Run 1. Neural experimentation is now frozen while downstream Phases 4/5 are qualified.
 
 Runs are single-seed controlled comparisons, not a statistical study. The validation set has already informed model selection and successive hypotheses, so these metrics are not an independent test estimate.
 
@@ -26,3 +26,12 @@ Runs are single-seed controlled comparisons, not a statistical study. The valida
 - [Run 4 normal-feature contract](phase3d_run4_normals.md)
 
 The separate [Phase 3P performance work](phase3p_training_performance.md) changes runtime instrumentation and optional data plumbing, not these scientific comparisons.
+
+## Phases 4/5 structural experiments (implemented; real results pending)
+
+- A: compare sampled semantic metrics with nearest-projected full-cloud validation metrics.
+- B: compare oracle-semantic and predicted-semantic structures; use verified instance references only when explicitly supplied.
+- C: compare convex-hull and origin-anchored voxel leaf-cloud volumes and runtime.
+- D: compare PCA extent with bounded graph-geodesic length proxies when defined.
+
+These experiments use the frozen Run 1 backend, no training and validation only. See [Phases 4/5](phases4_5_phenotyping_pipeline.md).

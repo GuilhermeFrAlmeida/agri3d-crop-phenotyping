@@ -163,7 +163,7 @@ These neural targets are not measured results or guarantees. Plant-identity grou
 - **Padding:** repeated padding points affect feature context/BatchNorm, but do not contribute directly to loss or metrics. Real validated 100k→10k clouds do not need padding. Degenerate undersized clouds are not evidence of equivalent training behavior.
 - **Provenance:** checkpoint hashes identify the manifest, not the PLY byte content. Preserve the pinned dataset revision and immutable extracted files externally. No dataset files or frozen split were regenerated here.
 
-At the time of this initial implementation note, Colab CUDA and real-data overfit checks were still open. Runs 1–3 have since been measured. Consult current [results](results.md) and [performance](performance.md); Run 4 remains in progress.
+At the time of this initial implementation note, Colab CUDA and real-data overfit checks were still open. Runs 1–3 have since been measured. Consult current [results](results.md) and [performance](performance.md); Run 4 has since completed and was rejected; Run 1 is frozen for Phases 4/5.
 
 ## Implementation verification and repository review
 

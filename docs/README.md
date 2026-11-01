@@ -31,7 +31,9 @@
 
 ## Current Development
 
-- [Phase 3D: Run 4 normals](phase3d_run4_normals.md) — implemented feature policy; real result pending.
+- [Phases 4/5 pipeline](phases4_5_phenotyping_pipeline.md) — implemented inference/structure/trait baseline; real-data qualification pending.
+- [Model interoperability](model_interoperability.md) — canonical PyTorch backend and explicit ONNX blocker/qualification protocol.
+- [Phase 3D: Run 4 normals](phase3d_run4_normals.md) — completed normal-feature comparison, rejected.
 - [Public-release audit](public_release_audit.md) — repository and history review with pre-publication action.
 
 ## Historical / Phase Notes

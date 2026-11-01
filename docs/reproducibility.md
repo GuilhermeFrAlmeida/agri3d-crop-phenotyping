@@ -16,7 +16,7 @@ For a CUDA machine, install the matching CUDA-enabled PyTorch build according to
 
 ## Dataset and frozen manifest
 
-Acquire the segmented 100k MaizeField3D archive under its separate CC BY-NC 4.0 terms. Pin the upstream Hugging Face dataset revision and keep it with the experiment metadata:
+Install download dependencies with `python -m pip install -e '.[data]'` if needed. Acquire the segmented 100k MaizeField3D archive under its separate CC BY-NC 4.0 terms. Pin the upstream Hugging Face dataset revision and keep it with the experiment metadata:
 
 ```bash
 DATASET_REVISION="<pinned-hugging-face-commit>"
@@ -79,9 +79,9 @@ python scripts/analyze_pointnet2.py \
 
 These metrics concern 10,000 fixed sampled points per plant, not projected predictions over the full cloud. Test is inaccessible through the current CLIs.
 
-## Run 4 gate and commands
+## Historical Run 4 gate and commands
 
-Run 4 requires its own XYZ+normal tiny-overfit checkpoint; the XYZ Run 1 gate is not sufficient. See [Phase 3D](phase3d_run4_normals.md) for the normal audit and detailed command sequence. The full run uses the same 10k points, batch 2, Adam, LR 0.001 and 100 epochs, and changes only the point-feature contract.
+Run 4 completed and was rejected. Its historical procedure required its own XYZ+normal tiny-overfit checkpoint; the XYZ Run 1 gate is not sufficient. See [Phase 3D](phase3d_run4_normals.md) for the normal audit and detailed command sequence. The full run uses the same 10k points, batch 2, Adam, LR 0.001 and 100 epochs, and changes only the point-feature contract.
 
 ## Checkpoints, resume and artifacts
 
@@ -92,3 +92,9 @@ Typical outputs are `run.json`, `metrics.json`, `summary.json`, `last.pt`, `best
 ## Colab
 
 In Colab, clone the reviewed source branch, install package extras without replacing its CUDA PyTorch build, place the dataset on local runtime disk for reads, and keep manifests/checkpoints on persistent storage. Use shell variables for local locations rather than committing mounted-drive paths. Qualified runtime controls are documented in [performance](performance.md); scientific batch size remains 2.
+
+## Frozen inference and Phases 4/5
+
+No new training is required: supply Run 1 `best.pt` to `python -m agri3d.pipeline analyze`. The backend verifies checkpoint contracts; the manifest evaluation harness also checks its exact-byte manifest hash and accepts validation only. Use the exact manifest sample ID for epoch-0 sampling parity. Measurements use full cleaned metric geometry, never model-normalized coordinates.
+
+[Phases 4/5 commands and artifact contract](phases4_5_phenotyping_pipeline.md) include single-plant CPU inference, bounded five-plant validation and all-78 validation experiments. Oracle mode can run geometry without a model. Public code accepts externally stored checkpoint paths and never redistributes weights/data. Where Git metadata is unavailable, supply `--code-commit` with the reviewed full SHA. Optional ONNX attempts and qualification rules are in [model interoperability](model_interoperability.md); current export is NOT QUALIFIED.
