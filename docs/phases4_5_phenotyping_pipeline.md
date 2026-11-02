@@ -1,6 +1,6 @@
 # Phases 4/5 — frozen inference, structure and phenotype measurements
 
-**Status: IMPLEMENTED — NOT YET EXPERIMENTALLY QUALIFIED.** No real MaizeField3D/checkpoint bytes were available during implementation. Synthetic CPU tests establish execution and invariants, not leaf/trait accuracy. Run 1 is frozen as the semantic reference. No training, architecture search, split regeneration or test evaluation occurs in this phase.
+**Implementation snapshot:** the initial status was **IMPLEMENTED — NOT YET EXPERIMENTALLY QUALIFIED**, with synthetic CPU tests only. A subsequent real val5 bundle and the [Phase 4A diagnostic sweep](phase4a_instance_diagnostics.md) now provide bounded structural evidence reported separately for review; production defaults remain unchanged pending approval. Full validation and biological leaf/trait accuracy remain unqualified. Run 1 is frozen as the semantic reference. No training, architecture search, split regeneration or test evaluation occurs in this phase.
 
 ## Scientific state
 
@@ -35,7 +35,7 @@ The evaluator reports sampled neural metrics separately from projected full-clou
 
 ## Phase 4 — geometric_graph_v1
 
-Initial development parameters, **not tuned/qualified on real plants**:
+Initial development parameters, still the production defaults. The [Phase 4A report](phase4a_instance_diagnostics.md) evaluates these on val5 and recommends a separate, unpromoted candidate:
 
 | Parameter | Default | Meaning |
 |---|---:|---|

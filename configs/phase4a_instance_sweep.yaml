@@ -1,0 +1,6 @@
+# Fixed Phase 4A development grid; no production config promotion.
+radii_m: [0.010, 0.015, 0.020, 0.025]
+max_neighbors: [16, 24, 32]
+fixed:
+  min_leaf_points: 100
+  attachment_radius_m: 0.03
