@@ -10,6 +10,7 @@ from plyfile import PlyData, PlyElement
 from agri3d.analysis.instance_artifacts import (
     PLANTS,
     SOURCES,
+    historical_pipeline_config,
     load_val5,
     verify_unchanged,
 )
@@ -36,7 +37,7 @@ from agri3d.pipeline.provenance import sha256_file
 def artifacts(tmp_path):
     root = tmp_path / 'val5'
     root.mkdir()
-    cfg = PipelineConfig().to_dict()
+    cfg = historical_pipeline_config().to_dict()
     model = {'model_family': 'pointnet2_ssg', 'feature_mode': 'xyz', 'checkpoint_sha256': 'c'*64,
                  'manifest_sha256': 'm'*64, 'input_points': 10000, 'selected_weights_verified': True,
                  'repository_metadata': {'frozen_run1_policy_enforced': True, 'compatible_experiment_policy': 'run1_xyz'}}
@@ -55,7 +56,7 @@ def artifacts(tmp_path):
             semantic = np.r_[np.zeros(220, dtype='int64'), np.ones(20, dtype='int64')]
             if source == SOURCES['predicted']:
                 semantic[0] = 1
-            partition = InstanceExtractor().extract(xyz, semantic).instance_labels(len(xyz))
+            partition = InstanceExtractor(historical_pipeline_config().instances).extract(xyz, semantic).instance_labels(len(xyz))
             report = {'schema_version': 1, 'plant_id': plant, 'semantic_source': source, 'split': 'val',
                 'clean_point_count': len(xyz), 'semantic_model': model,
                 'structure': {'accepted_leaf_instances': len(np.unique(partition[partition > 0]))},
@@ -85,7 +86,7 @@ def test_exact_grid_and_validation():
     sweep = SweepConfig.load('configs/phase4a_instance_sweep.yaml')
     assert len(sweep.grid()) == 12
     assert [key for key, _ in sweep.grid()] == [f'r{r:03d}_k{k}' for r in [10, 15, 20, 25] for k in [16, 24, 32]]
-    assert dict(sweep.grid())[BASELINE] == PipelineConfig().instances
+    assert dict(sweep.grid())[BASELINE] == historical_pipeline_config().instances
     for kwargs in [{'radii_m': (.01,)}, {'max_neighbors': (True, 24, 32)},
                    {'min_leaf_points': 200}, {'attachment_radius_m': .04}]:
         with pytest.raises(ValueError):
@@ -228,3 +229,21 @@ def test_rejects_artifact_scope_and_policy_mismatch(artifacts, mutation):
     write_json(path, value)
     with pytest.raises(ValueError):
         load_val5(artifacts)
+
+
+def test_approved_defaults_match_yaml_and_preserve_historical_replay(artifacts):
+    from dataclasses import replace
+
+    current = PipelineConfig.load('configs/phenotyping_pipeline.yaml')
+    historical = PipelineConfig.load('configs/phenotyping_pipeline_phase4a_initial.yaml')
+    assert current == PipelineConfig()
+    assert current.instances.neighborhood_radius_m == .020
+    assert current.instances.max_neighbors == 32
+    assert historical == historical_pipeline_config()
+    assert current == replace(historical, instances=replace(historical.instances,
+        neighborhood_radius_m=.020, max_neighbors=32))
+    # New production settings must never be mistaken for archived input settings.
+    with pytest.raises(ValueError, match='differs'):
+        load_val5(artifacts, current)
+    records, _ = load_val5(artifacts, historical)
+    assert len(records) == 10

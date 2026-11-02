@@ -7,9 +7,10 @@ import yaml
 
 @dataclass(frozen=True)
 class InstanceConfig:
+    """Phase 4A selection frozen for val78; historical configs remain explicit."""
     method: str = "geometric_graph_v1"
-    neighborhood_radius_m: float = 0.015
-    max_neighbors: int = 16
+    neighborhood_radius_m: float = 0.020
+    max_neighbors: int = 32
     min_leaf_points: int = 100
     attachment_radius_m: float = 0.03
 

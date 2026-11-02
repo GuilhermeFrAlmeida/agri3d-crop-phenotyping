@@ -1,0 +1,19 @@
+# Historical Phase 4A input/replay config: initial 0.015 m / 16-neighbor setting.
+# Not the current production default; preserve for original val5 artifact compatibility.
+coordinate_units: m
+vertical_axis: z
+seed: 42
+projection: nearest_neighbor
+instances:
+  method: geometric_graph_v1
+  neighborhood_radius_m: 0.015
+  max_neighbors: 16
+  min_leaf_points: 100
+  attachment_radius_m: 0.03
+phenotypes:
+  voxel_size_m: 0.01
+  geodesic: true
+  geodesic_voxel_size_m: 0.01
+  geodesic_radius_m: 0.03
+  geodesic_neighbors: 8
+  geodesic_max_nodes: 2048

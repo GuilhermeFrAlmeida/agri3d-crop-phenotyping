@@ -1,12 +1,13 @@
-# Geometry thresholds are unqualified initial development settings, in meters.
+# Instance graph frozen by the bounded Phase 4A five-plant diagnostic for val78.
+# Val78 is evaluation only: do not tune these thresholds on its results.
 coordinate_units: m
 vertical_axis: z
 seed: 42
 projection: nearest_neighbor
 instances:
   method: geometric_graph_v1
-  neighborhood_radius_m: 0.015
-  max_neighbors: 16
+  neighborhood_radius_m: 0.020
+  max_neighbors: 32
   min_leaf_points: 100
   attachment_radius_m: 0.03
 phenotypes:

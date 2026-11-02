@@ -1,115 +1,184 @@
-# Phase 4A — instance diagnostic protocol
+# Phase 4A — Instance Reconstruction Diagnostics
 
-## Context
+**Phase 4A: COMPLETE. Instance configuration: FROZEN.**
 
-This focused CPU-first tool qualifies `geometric_graph_v1` on the same five previously inspected validation plants: **0006, 0014, 0015, 0022, 0029**. Oracle semantics are primary; unchanged Run 1 projected semantics are secondary. Component count is not verified biological leaf count. No neural inference, training, sampling, projection, phenotype-formula change, test access or val78 evaluation is performed by this runner.
+**Phase 4/5 overall: IMPLEMENTED — FULL VALIDATION PENDING. Next: VAL78.**
 
-The implementation and synthetic verification are documented here. The completed private val5 experiment's detailed measurements, recommendation receipt and point-cloud views are delivered separately for review. They are intentionally not published in this PR: automatic approval review rejected disclosure of detailed derived private-artifact results. No public instance-accuracy claim or automatic configuration promotion is made.
+## Objective
 
-## Baseline and grid
+Determine whether increased connectivity in `geometric_graph_v1` reconnects artificial leaf fragments without unacceptable component merging, point rejection or CPU cost. This bounded study qualifies a configuration for the next full validation evaluation; it does not establish biological leaf-instance accuracy.
 
-The production config remains unchanged at radius **0.015 m**, maximum **16 neighbors**, minimum **100 points** and attachment diagnostic radius **0.03 m**.
+**Component counts are structural diagnostics and are not verified biological leaf counts.** No verified instance-level ground truth is currently available.
 
-The exact controlled grid is radii **0.010 / 0.015 / 0.020 / 0.025 m** × neighbor caps **16 / 24 / 32**: 12 configurations. Minimum size and attachment radius remain fixed. Both modes on five plants make 120 extractor calls, oracle first. The graph computation is unchanged; only an undirected-edge metadata counter is added.
+## Experimental protocol
 
-See [sweep configuration](../configs/phase4a_instance_sweep.yaml) and [production config](../configs/phenotyping_pipeline.yaml).
+The experiment reused existing val5 full-resolution metric geometry, aligned semantic labels and baseline instance partitions. Oracle semantic labels were the primary tuning signal. Unchanged Run 1 projected semantic predictions were a secondary robustness check, keeping semantic-model and graph errors distinguishable.
 
-## Artifact reuse and isolation
+Twelve configurations × five plants × two semantic modes produced **120 instance extractions**. All ten archived initial-configuration partitions reproduced exactly. No semantic inference, training, projection, split regeneration, test evaluation or val78 execution occurred. Run 1, 10k neural sampling, semantic labels, projection and phenotype formulas remained unchanged. Only graph radius and neighbor cap varied. The extraction algorithm was not replaced.
 
-The loader reads metric full-cloud `structure.ply`, aligned semantic/instance label arrays, reports and checksum inventories from existing val5 outputs. It never opens raw dataset PLYs, checkpoint weights or sampled prediction NPZs. Both modes must identify the exact five plants; matching geometry, source indices, scalar labels, model policy, manifest metadata and preprocessing config are checked. Arrays become read-only; reused files are rehashed after execution. An explicit non-validation marker is rejected before extraction. The original batch lacks an explicit split field, so membership remains the caller's prior-val5 assertion constrained to these exact IDs, not a newly verified raw-manifest lookup.
+## Parameter grid
 
-No verified numeric supplementary palette is present in the repository, and the reusable PLYs lack original annotation RGB. The existing verified-palette adapter cannot establish ground truth from these artifacts. Unique component IDs or colors are never treated as biological annotation.
-
-## Diagnostic definitions
-
-All fractions use a stated denominator; undefined quantities are JSON `null` / empty CSV cells.
-
-| Diagnostic | Definition |
+| Parameter | Evaluated values |
 |---|---|
-| Raw / accepted / rejected counts | Connected components before size filtering / size ≥100 / size <100 |
-| Rejected points; unassigned fraction | Sum of rejected sizes; rejected leaf points divided by all semantic leaf points |
-| Accepted point coverage | 1 − unassigned fraction; undefined when there are no leaf points |
-| Largest / median component | Largest raw component; median **accepted** size (raw median also recorded) |
-| Small-component fraction | Rejected components / raw components |
-| Raw-to-accepted ratio | Raw components / accepted components |
-| Near-threshold fraction | Accepted components of **100–200 points inclusive** / all accepted components |
-| Very-small rejected fraction | Rejected components of **≤25 points** / all rejected components |
-| Attachment consistency | Accepted components with closest leaf/stalk distance ≤0.03 m / components with an available stalk distance |
-| Attachment distances | Mean and max of each accepted component's closest leaf/stalk distance |
-| Edge count | Number of undirected edges after graph symmetrization |
-| Runtime | Wall milliseconds for `InstanceExtractor.extract` only; excludes loading, diagnostics, serialization and plotting |
+| Neighborhood radius | 0.010, 0.015, 0.020, 0.025 m |
+| Maximum neighbors | 16, 24, 32 |
+| Minimum accepted component size | 100 points, fixed |
+| Attachment diagnostic radius | 0.03 m, fixed |
 
-Component size distributions and per-component details are persisted. A component is flagged heuristically for size >3× the per-plant accepted median, vertical extent >60% of plant height, nearby stalk-contact Z span >0.15 m, or at least two contact-height groups separated by >0.05 m with ≥5 unique stalk points per group. Contacts are nearest stalk rows within 0.03 m, not biological attachment annotations. These proxies can flag valid curved/large leaves and miss touching leaves at similar heights; their union is **not a merge classifier**. Closest-point attachment consistency alone does not establish instance correctness.
+The historical initial development setting was **0.015 m / 16 neighbors**. The selected frozen setting is **0.020 m / 32 neighbors**. The [sweep grid](../configs/phase4a_instance_sweep.yaml) remains unchanged. The [historical input configuration](../configs/phenotyping_pipeline_phase4a_initial.yaml) is retained for original val5 artifact replay; it is not the production default.
 
-Adjacent radius settings at fixed neighbor cap, and adjacent neighbor caps at fixed radius, are compared. A count drop of ≥25% **and** ≥3 accepted components is a conservative collapse warning. Adjusted Rand index compares leaf-point partitions including noise as a cluster, independent of ID numbering. Absorption counts prior accepted components with ≥90% of their points in one current accepted component; combining multiple prior components is descriptive, not proof of a merge error. IDs/colors are configuration-local.
+## Frozen development cohort
 
-## Reproduce the bounded sweep
+The study used exactly **0006, 0014, 0015, 0022 and 0029**, the same five validation plants inspected previously. No replacement plants or additional validation plants were used for tuning. This subset is a development/qualification cohort, **not an independent final validation cohort**. The dataset's plant-identity split remains 364 train / 78 validation / 78 test, seed 42; test remains untouched.
 
-```bash
-python -m pip install -e '.[dev,analysis,visualization]'
-python scripts/evaluate_instance_sweep.py \
-  --input-artifacts <EXTRACTED_VAL5_ROOT> \
-  --config configs/phenotyping_pipeline.yaml \
-  --sweep-config configs/phase4a_instance_sweep.yaml \
-  --mode both --plants 0006 0014 0015 0022 0029 \
-  --output-dir <NEW_PHASE4A_OUTPUT>
+## Oracle-semantic results
+
+Measured accepted geometric component counts:
+
+| Plant | Initial development setting | Selected setting |
+|---|---:|---:|
+| 0006 | 15 | 13 |
+| 0014 | 15 | 14 |
+| 0015 | 25 | 18 |
+| 0022 | 9 | 9 |
+| 0029 | 17 | 13 |
+| **Total** | **81** | **67** |
+
+**Interpretation:** additional connectivity reduced partition fragmentation on several plants. A smaller count alone is not evidence of better biological segmentation: distinct touching leaves can also merge. The decision therefore included size/coverage diagnostics, stability and visual inspection rather than count minimization.
+
+## Predicted-semantic results
+
+Measured accepted counts with the unchanged Run 1 projected labels:
+
+| Plant | Initial development setting | Selected setting | Selected predicted − oracle |
+|---|---:|---:|---:|
+| 0006 | 20 | 17 | +4 |
+| 0014 | 16 | 14 | 0 |
+| 0015 | 26 | 19 | +1 |
+| 0022 | 16 | 16 | +7 |
+| 0029 | 19 | 15 | +2 |
+| **Total** | **97** | **81** | **+14** |
+
+Plant **0022 retains a seven-component oracle/predicted gap**. The oracle/predicted contrast strongly associates this issue with semantic-model error; graph connectivity alone does not resolve it. This is a diagnostic association, not instance-GT verification. Parameters were not selected to force 0022 toward an assumed biological count.
+
+## Fragmentation diagnostics
+
+The near-threshold band is **100–200 points inclusive** among accepted components, with minimum accepted size fixed at 100.
+
+| Oracle diagnostic | Initial development setting | Selected setting |
+|---|---:|---:|
+| Near-threshold accepted components / all accepted components | 9 / 81 | 4 / 67 |
+
+**Interpretation:** fewer accepted components close to the cutoff support the hypothesis that added connectivity reconnects some detached blade/tip fragments. This is not proven biological leaf recovery.
+
+### Unassigned-point behavior
+
+**Measured result:** candidate unassigned fractions remained **below 0.177%** across both oracle and predicted semantic modes. The denominator is all semantic leaf points in the relevant plant/mode; unassigned points are rejected small-component leaf points.
+
+This indicates that increased connectivity did not cause substantial additional point rejection. It does not prove correct instance identities or exclude merging.
+
+### Diagnostic definitions and stability
+
+The sweep records raw connected components before filtering, accepted/rejected counts, rejected point counts, unassigned fraction, accepted point coverage, largest raw and median accepted size, component-size distributions, raw/accepted ratio, attachment diagnostics, graph edge count and extractor runtime.
+
+Small-component fraction means rejected / raw components. Very-small rejected fraction uses rejected components of ≤25 points. Attachment consistency means accepted components with an available closest stalk distance ≤0.03 m; it is a geometric proximity proxy, not an anatomical annotation.
+
+Conservative merge-risk flags cover size >3× the accepted median, vertical extent >60% of plant height, contact-height span >0.15 m, or multiple contact-height regions separated by >0.05 m with ≥5 unique stalk points per group. Relative-size flags can disappear when the median grows. None is a definitive merge classifier.
+
+Adjacent settings are compared by component count, leaf-partition adjusted Rand index and component absorption. A ≥25% and ≥3-component count drop is a warning, not a verified merge. A prior component is counted as absorbed when ≥90% of its points map to one current accepted component.
+
+**Plant 0015 remains parameter-sensitive.** The selected setting balances connectivity with retaining separation; full parameter invariance is not claimed. No expected maize leaf-count range was used as a tuning target.
+
+## Runtime tradeoff
+
+Measured **CPU instance-extractor** wall times combine the **ten plant/mode observations** at each compared setting. Loading, additional diagnostics, serialization, projection and phenotype extraction are outside this timing scope.
+
+| Configuration | Mean | Median | P95 | Max |
+|---|---:|---:|---:|---:|
+| Previous development default | 3.22 s | 3.25 s | 3.78 s | 3.88 s |
+| Selected candidate | 4.14 s | 4.19 s | 4.51 s | 4.52 s |
+
+These observations came from a **shared execution environment**. Percentiles describe these observations, not repeated-run uncertainty. They are not production-latency claims and do not establish an isolated benchmark speed regression. The selected configuration trades additional CPU time for a more connected structural partition; no speedup is claimed.
+
+## Visual review findings
+
+Qualitative metric-space review supported reconnection of detached blade/tip portions while preserving recognizable large-scale plant structure. Component-size/absorption checks were considered alongside the views; visually plausible reconnection was not treated as verified biological identity. Residual sensitivity on 0015 and the semantic-mode discrepancy on 0022 remain explicit.
+
+Static geometric diagnostics cannot exclude all merge cases. Increased connectivity can reconnect fragments **and increase merge risk**. No point-cloud renders or raw dataset content are redistributed with this report; public redistribution of such assets has not been established here.
+
+## Selected configuration
+
+The approved [production/default configuration](../configs/phenotyping_pipeline.yaml) is:
+
+```yaml
+instances:
+  method: geometric_graph_v1
+  neighborhood_radius_m: 0.020
+  max_neighbors: 32
+  min_leaf_points: 100
+  attachment_radius_m: 0.03
 ```
 
-Missing reusable evidence fails; no inference fallback or different plant subset is selected. New-only output directories protect existing artifacts. `--mode oracle` and `--mode predicted` are available, but final qualification requires both modes and exact archived baseline partition reproduction.
+| Setting | Initial development | Phase 4A frozen |
+|---|---:|---:|
+| Radius | 0.015 m | 0.020 m |
+| Maximum neighbors | 16 | 32 |
+| Minimum component size | 100 | 100 |
+| Attachment radius | 0.03 m | 0.03 m |
 
-## Results, visuals and review
+The choice combines lower near-threshold fragmentation, improved structural connectivity, low unassigned fractions, acceptable qualitative visual behavior and a known CPU-runtime tradeoff. It does **not** claim to maximize biological accuracy. Unrelated configuration values and the geometric extraction algorithm are preserved. Python API defaults and YAML defaults agree; historical replay uses an explicit initial configuration.
 
-Output files: `summary.json`, `per_plant_config.csv`, `oracle_comparison.csv`, `predicted_comparison.csv`, `runtime.csv`, `recommendation.json`, `configuration.json`, `provenance.json`, `report.md`, `stability.csv`, `partitions/`, `component_details/`, `charts/`, `visualizations/` and a checksum inventory. The mode-join CSV reports oracle/predicted differences; full per-mode diagnostics remain in `per_plant_config.csv`.
+## Limitations
 
-One compact HTML and XZ/YZ PNG per plant/mode compare the baseline, lower connectivity (0.010/16), higher connectivity (0.025/32), and the reviewed candidate, deduplicated. Geometry is metric; dark stalk, grey unassigned points and deterministic component colors/IDs remain explicit. Views sample up to 6,500 fixed rows; extraction uses the full cloud. IDs are configuration-local.
+- No verified instance-level ground truth is currently available; component count is not biological leaf count.
+- Plant 0015 remains parameter-sensitive.
+- Plant 0022 retains a seven-component oracle/predicted gap strongly associated with semantic-model error, unresolved by graph connectivity alone.
+- Static diagnostics cannot exclude all merges; increased connectivity can merge distinct structures.
+- Five development plants do not constitute an independent final validation cohort.
+- Shared-environment CPU timings are descriptive and do not establish deployment latency.
+- Full Phase 4/5 validation and biological phenotype accuracy remain pending.
+- No tuning is permitted on val78 after this configuration freeze.
 
-Without a bound multi-criteria review, the output conservatively says `KEEP CURRENT DEFAULT` / `NOT READY FOR VAL78`. Review must address fragmentation, absorption/merge proxies, stability, coverage, all five plants, predicted robustness and runtime. Do not minimize component count or tune toward an assumed maize leaf count. Review JSON schema:
+## Qualification decision
 
-```json
-{
-  "input_artifact_fingerprint": "<FROM_PROVENANCE_JSON>",
-  "reviewer": "<REVIEW_METHOD_AND_ATTRIBUTION>",
-  "recommended_config_id": "<ENUMERATED_GRID_ID>",
-  "decision": "KEEP CURRENT DEFAULT",
-  "phase4_readiness": "NOT READY FOR VAL78",
-  "reasoning": ["<MULTI_CRITERIA_EVIDENCE>"],
-  "plant_observations": {
-    "0006": "<OBSERVATION>", "0014": "<OBSERVATION>", "0015": "<OBSERVATION>",
-    "0022": "<OBSERVATION>", "0029": "<OBSERVATION>"
-  }
-}
-```
+- **Phase 4A: COMPLETE**
+- **Decision: PROMOTE NEW CONFIG**
+- **Instance configuration: FROZEN**
+- **Readiness: READY FOR VAL78**
+- **Phase 4/5 overall: IMPLEMENTED — FULL VALIDATION PENDING**
 
-Allowed decisions: `KEEP CURRENT DEFAULT`, `PROMOTE NEW CONFIG`, or `NO CONFIG READY — NEED ALGORITHM CHANGE`. Readiness is `READY FOR VAL78` or `NOT READY FOR VAL78`; it does not imply botanical instance/trait accuracy. For a keep decision use baseline ID `r015_k16`. A promote decision must choose another enumerated ID.
+Readiness means a fixed configuration for a descriptive full validation evaluation, not established biological leaf-instance or phenotype accuracy. The approved measured tables are sanitized; no review receipt, storage/account identifiers, manifests, checkpoint locations or dataset artifacts are published.
 
-Finalize the new sweep using its private reviewed receipt, without repeating extraction or inference:
+## Next step
 
-```bash
-python scripts/evaluate_instance_sweep.py \
-  --input-artifacts <EXTRACTED_VAL5_ROOT> \
-  --output-dir <COMPLETED_PHASE4A_OUTPUT> \
-  --finalize-review --review-json <PRIVATE_REVIEW_JSON>
-```
+**The 78-plant validation execution is an evaluation run, not a tuning run.**
 
-This validates the completed output inventory and the original input fingerprint. A different source bundle needs a fresh review. It changes only the new sweep's review/report/config-copy/selected visual assets and inventory, never the source val5 artifacts or production config. `recommended_pipeline.yaml` is explicitly unpromoted.
+Run the frozen configuration once the full evaluation is scheduled. If val78 exposes failures, report them without retrospectively tuning against the same 78 plants. Any algorithmic revision is a new experiment requiring an explicit development protocol. The five Phase 4A plants overlap the full validation cohort; interpretation must retain this dependence. Advanced model work remains deferred.
 
-## Approval boundary
-
-Do not overwrite `configs/phenotyping_pipeline.yaml`. After explicit approval of the privately reviewed candidate and a val78 run, use its unpromoted config copy:
+The following command is provided for the next experiment; **it was not executed during this publication/configuration-freeze task**:
 
 ```bash
 python scripts/evaluate_phenotyping_pipeline.py \
   --manifest <FROZEN_MANIFEST> --root <DATA_ROOT> \
   --checkpoint <RUN1_BEST_PT> \
-  --config <COMPLETED_PHASE4A_OUTPUT>/recommended_pipeline.yaml \
+  --config configs/phenotyping_pipeline.yaml \
   --split val --mode both --device cpu --visualize \
   --output-dir <NEW_VAL78_OUTPUT>
 ```
 
-This command is documented, not executed. No test split is permitted.
+Omitting `--max-plants` requests the full validation split. Supply the existing frozen manifest and Run 1 selected checkpoint; do not regenerate the split or evaluate test.
 
-## Verification and limitations
+### Historical sweep reproducibility
 
-Full suite: **201 passed, 4 skipped** for unavailable CUDA/workspace tensor-worker sockets. Changed Python files pass Ruff; repository-wide lint has 45 pre-existing findings in unchanged files. Tests cover grid validation, checksum reuse, exact mode separation, deterministic instances, diagnostics/aggregation, review binding/serialization, rejection of test/cohort/model-policy mismatches, no inference rerun, review reuse without extraction, and unchanged production config.
+For authorized original val5 artifacts, the historical sweep can be replayed with its explicit original input contract. This command is documentation only; no sweep is rerun in this task:
 
-Five development plants do not establish population or botanical accuracy. Static projections can hide overlapping/touching surfaces. Relative-size and contact proxies can flag valid leaves and miss real merges. Timing is one shared-host wall-time observation per cell, with possible concurrent activity; percentiles across five plants are descriptive rather than repeated-benchmark uncertainty. Cross-version kNN ties may differ; exact archived baseline partition reproduction is required before reviewed qualification. Full validation remains a separate authorized action.
+```bash
+python scripts/evaluate_instance_sweep.py \
+  --input-artifacts <EXTRACTED_VAL5_ROOT> \
+  --config configs/phenotyping_pipeline_phase4a_initial.yaml \
+  --sweep-config configs/phase4a_instance_sweep.yaml \
+  --mode both --plants 0006 0014 0015 0022 0029 \
+  --output-dir <NEW_SWEEP_OUTPUT>
+```
+
+The loader preserves exact cohort/mode separation, checksum and alignment checks, read-only inputs and non-validation rejection. Historical source artifacts are never interpreted as having been generated with the newly promoted settings.
