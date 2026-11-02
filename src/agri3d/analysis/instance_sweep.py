@@ -11,10 +11,16 @@ import yaml
 
 from agri3d.phenotyping.instances import InstanceExtractor
 from agri3d.pipeline.artifacts import write_json
-from agri3d.pipeline.config import InstanceConfig, PipelineConfig
+from agri3d.pipeline.config import InstanceConfig
 from agri3d.pipeline.provenance import provenance, sha256_file
 
-from .instance_artifacts import PLANTS, SOURCES, load_val5, verify_unchanged
+from .instance_artifacts import (
+    PLANTS,
+    SOURCES,
+    historical_pipeline_config,
+    load_val5,
+    verify_unchanged,
+)
 from .instance_diagnostics import (
     DIAGNOSTIC_POLICY,
     attachment_context,
@@ -316,7 +322,7 @@ def run_sweep(input_artifacts, output_dir, config=None, sweep=None, mode="both",
         raise ValueError("Only fixed val5 validation artifacts permitted; no test access")
     if mode not in ("both", "oracle", "predicted"):
         raise ValueError("Invalid semantic mode")
-    config, sweep = config or PipelineConfig(), sweep or SweepConfig()
+    config, sweep = config or historical_pipeline_config(), sweep or SweepConfig()
     records, source_prov = load_val5(input_artifacts, config, plants, split)
     records = [r for r in records if mode == "both" or r.source == SOURCES[mode]]
     out = Path(output_dir).resolve()
@@ -426,7 +432,7 @@ def finalize_review(input_artifacts, output_dir, review_path, visualize=True):
         raise ValueError("Cannot review an incomplete sweep")
     configuration = json.loads((out / "configuration.json").read_text())
     config_data = configuration["pipeline_config"]
-    config = PipelineConfig.load()  # this protocol freezes the original pipeline
+    config = historical_pipeline_config()  # replay the original, not promoted, contract
     if config.to_dict() != config_data:
         raise ValueError("Unsupported original pipeline contract")
     records, source_prov = load_val5(source, config)

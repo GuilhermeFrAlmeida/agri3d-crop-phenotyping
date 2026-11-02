@@ -9,14 +9,14 @@ Status distinguishes implementation from real-data qualification. No production-
 - Validation error analysis and controlled Runs 2/3/4 (augmentation, scheduler, estimated normals), all rejected relative to Run 1.
 - Phase 3P profiling, runtime qualification and bounded throughput tools.
 - Phases 4/5 software: model-neutral inference, canonical `.pt` adapter, full-cloud nearest projection, geometric instance baseline, metric trait methods, artifact writer, visualization, validation harness and synthetic tests.
-- Phase 4A CPU-only val5 graph sweep: 12 configurations, both semantic modes, archived baseline parity and structural/visual diagnostics; private results delivered separately; no production promotion.
+- Phase 4A CPU-only val5 graph sweep: 12 configurations, both semantic modes, archived baseline parity and structural/visual diagnostics; sanitized results published; 0.020 m / 32 neighbors promoted and frozen before val78.
 - ONNX attempt/qualification tooling with explicit NOT QUALIFIED capture blocker; no portable PointNet++ artifact is qualified.
 
 ## In progress
 
 - Phases 4/5 real MaizeField3D development-data qualification.
 - Independent verification of exact instance palette and quantitative phenotype references.
-- Review and approval of the Phase 4A candidate, then a separately authorized val78 descriptive evaluation. See [the qualification report](phase4a_instance_diagnostics.md).
+- Full 78-plant validation of the frozen Phase 4/5 pipeline: **pending**. It is evaluation, not tuning. Report failures without retuning against the same 78 plants; any revision needs a new experiment and explicit development protocol. See [the qualification report](phase4a_instance_diagnostics.md).
 
 ## Planned / deferred
 

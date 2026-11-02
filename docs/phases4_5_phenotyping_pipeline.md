@@ -1,6 +1,8 @@
 # Phases 4/5 — frozen inference, structure and phenotype measurements
 
-**Implementation snapshot:** the initial status was **IMPLEMENTED — NOT YET EXPERIMENTALLY QUALIFIED**, with synthetic CPU tests only. A subsequent real val5 bundle and the [Phase 4A diagnostic sweep](phase4a_instance_diagnostics.md) now provide bounded structural evidence reported separately for review; production defaults remain unchanged pending approval. Full validation and biological leaf/trait accuracy remain unqualified. Run 1 is frozen as the semantic reference. No training, architecture search, split regeneration or test evaluation occurs in this phase.
+**Status: IMPLEMENTED — FULL VALIDATION PENDING.** Phase 4A is complete. The bounded five-plant diagnostic selected **0.020 m / 32 neighbors**, now frozen in the production configuration before val78. See the [measured Phase 4A report](phase4a_instance_diagnostics.md). This qualifies a configuration for evaluation, not biological instance or phenotype accuracy. Run 1 remains the frozen semantic reference; test remains untouched.
+
+**The 78-plant validation execution is an evaluation run, not a tuning run.** Report failures without retrospective parameter tuning against the same 78 plants. Any algorithmic revision must be a new experiment with an explicit development protocol. Advanced model work remains deferred.
 
 ## Scientific state
 
@@ -35,12 +37,12 @@ The evaluator reports sampled neural metrics separately from projected full-clou
 
 ## Phase 4 — geometric_graph_v1
 
-Initial development parameters, still the production defaults. The [Phase 4A report](phase4a_instance_diagnostics.md) evaluates these on val5 and recommends a separate, unpromoted candidate:
+Frozen production parameters selected by [Phase 4A](phase4a_instance_diagnostics.md), before val78. The historical initial setting was 0.015 m / 16 neighbors; it is retained only in the explicit historical replay config. Minimum size and attachment radius are unchanged:
 
 | Parameter | Default | Meaning |
 |---|---:|---|
-| neighborhood_radius_m | 0.015 | Maximum edge length in meters |
-| max_neighbors | 16 | Up to 16 nearest other leaf points per query; graph is symmetrized |
+| neighborhood_radius_m | 0.020 | Maximum edge length in meters |
+| max_neighbors | 32 | Up to 32 nearest other leaf points per query; graph is symmetrized |
 | min_leaf_points | 100 | Minimum accepted component size |
 | attachment_radius_m | 0.03 | Closest leaf/stalk-pair distance for a diagnostic attachment flag |
 
@@ -141,7 +143,7 @@ ONNX attempt and requalification commands/status are in [model interoperability]
 
 ## Experiments, timing and implementation verification
 
-The evaluation harness separates A: sampled vs projected semantic scores; B: oracle vs predicted structure diagnostics/optional verified instance scores; C: convex-hull minus voxel-volume distributions; D: per-plant mean graph-length minus PCA-length distributions. It also produces per-stage mean/median/P95/max. Undefined methods/references remain null. Default fixed radii are not tuned by this implementation.
+The evaluation harness separates A: sampled vs projected semantic scores; B: oracle vs predicted structure diagnostics/optional verified instance scores; C: convex-hull minus voxel-volume distributions; D: per-plant mean graph-length minus PCA-length distributions. It also produces per-stage mean/median/P95/max. Undefined methods/references remain null. The Phase 4A-selected fixed radii are frozen; the full validation execution does not tune them.
 
 Wall timing covers load, filtering, optional GT decoding, normalization, sampling, inference, projection, instances, measurements and payload serialization. The total includes hash/provenance work but excludes final JSON bookkeeping. GPU inference wall time includes transfers and synchronization. When CUDA is used, a separately labeled nested event duration measures forward+softmax only and must not be added to wall-stage totals.
 

@@ -12,13 +12,13 @@ Agri3D is an engineering and applied-research pipeline for semantic crop-structu
 | Dataset subset | 520 annotated plants; 100k-point PLY source clouds |
 | Frozen split | 364 train / 78 validation / 78 test; plant identity grouping |
 | Neural input | 10,000 points per plant; XYZ in Runs 1–3, XYZ + estimated normals in Run 4 |
-| Development | Runs 1–4 complete; Run 1 frozen. Phases 4/5 implemented; val5 graph sweep complete, candidate awaiting approval before val78 |
+| Development | Runs 1–4 complete; Run 1 frozen. Phase 4A complete; 0.020 m / 32-neighbor graph frozen. Full Phase 4/5 validation pending |
 
 Pipeline: **PLY → clean and decode RGB supervision → normalize and sample → PointNet++ SSG → leaf/stalk point labels → validation analysis**. Test data remains untouched.
 
 ## Overview
 
-The repository focuses on binary per-point segmentation of **leaf** and **stalk** structures in individual maize plants. It includes deterministic preprocessing, controlled training/validation, per-plant error analysis, profiling and throughput tools. A CPU-compatible downstream pipeline now adds full-cloud projection, geometric leaf components and metric-space trait measurements. The [Phase 4A val5 graph sweep](docs/phase4a_instance_diagnostics.md) recommends a frozen candidate for review before val78; biological instance/trait accuracy remains unqualified.
+The repository focuses on binary per-point segmentation of **leaf** and **stalk** structures in individual maize plants. It includes deterministic preprocessing, controlled training/validation, per-plant error analysis, profiling and throughput tools. A CPU-compatible downstream pipeline now adds full-cloud projection, geometric leaf components and metric-space trait measurements. The [Phase 4A val5 graph sweep](docs/phase4a_instance_diagnostics.md) is complete; the 0.020 m / 32-neighbor instance configuration is frozen for full validation. Phase 4/5 is implemented with full validation pending; biological instance/trait accuracy remains unqualified.
 
 ## Key results
 

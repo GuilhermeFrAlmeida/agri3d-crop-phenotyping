@@ -9,7 +9,7 @@ from agri3d.pipeline.config import PipelineConfig
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--input-artifacts", required=True)
-    p.add_argument("--config", default="configs/phenotyping_pipeline.yaml")
+    p.add_argument("--config", default="configs/phenotyping_pipeline_phase4a_initial.yaml")
     p.add_argument("--sweep-config", default="configs/phase4a_instance_sweep.yaml")
     p.add_argument("--mode", choices=["both", "oracle", "predicted"], default="both")
     p.add_argument("--split", choices=["val"], default="val")

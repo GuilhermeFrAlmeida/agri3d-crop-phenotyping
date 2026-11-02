@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from plyfile import PlyData
 
-from agri3d.pipeline.config import PipelineConfig
+from agri3d.pipeline.config import InstanceConfig, PipelineConfig
 from agri3d.pipeline.provenance import sha256_file
 from agri3d.preprocessing.labels import validate_labels
 
@@ -19,6 +19,11 @@ SOURCES = {"oracle": "ground_truth", "predicted": "run1_projected_prediction"}
 def canonical_hash(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
                                      allow_nan=False).encode()).hexdigest()
+
+
+def historical_pipeline_config():
+    """Original val5 contract, independent of the promoted production defaults."""
+    return PipelineConfig(instances=InstanceConfig(neighborhood_radius_m=.015, max_neighbors=16))
 
 
 @dataclass
@@ -47,7 +52,7 @@ def load_val5(root, config=None, plants=None, split="val"):
     if len(plants) != 5 or set(plants) != set(PLANTS):
         raise ValueError("Use exactly 0006 0014 0015 0022 0029; no subset replacement")
     root = Path(root).resolve()
-    config = config or PipelineConfig()
+    config = config or historical_pipeline_config()
     reused = {}
 
     def checked_file(path):
