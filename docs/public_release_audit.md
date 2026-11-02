@@ -4,7 +4,7 @@
 
 **Review date: 2026-11-02. Basis:** `main` at `3a50d684c944682b5f5c80054f3c034315824296` plus `chore/public-portfolio-hardening`. This audit is a scoped engineering review, not a guarantee that pattern scanning finds every possible secret.
 
-**Release-candidate decision: READY WITH MANUAL ACTIONS, provided the branch's required CI check is green.** Repository visibility was verified as private at review time and is not changed here. No release, package, tag, model hosting, history rewrite or remote branch deletion is performed.
+**Release-candidate decision: READY WITH MANUAL ACTIONS.** Clean Ubuntu CI passed on the implementation commit; require the reviewed head to remain green. Repository visibility was verified as private at review time and is not changed here. No release, package, tag, model hosting, history rewrite or remote branch deletion is performed.
 
 ## Safety and presentation checks
 
@@ -23,7 +23,7 @@
 | License consistency | PASS, with ownership decision | Canonical Apache-2.0 LICENSE; package metadata includes its expression/file; appendix placeholder remains an example | Add a project-specific notice only with verified ownership; no separate report license invented |
 | Metric / stale-state review | PASS | Run 1–4 values preserved; approved val78 aggregates and report corroborate 156 executions / zero failures; current docs updated | Keep historical selection and later sampled/full-cloud evaluations distinct |
 | Local links / command references | PASS after validation | Referenced files/configs and current CLI interfaces checked; no removed-plan links remain | Check PR verification summary and CI before public release |
-| CI / installation | REQUIRED GATE | Missing Open3D EGL runtime addressed with `libegl1`, real import smoke and unchanged geometry tests; Python 3.11 / Ubuntu 24.04 canonical | Require green branch CI; do not waive known environment/test failures |
+| CI / installation | PASS | Clean Ubuntu 24.04 / Python 3.11: EGL setup, real Open3D import, Ruff and **207 passed / 3 skipped**; original geometry failures are resolved | Require green CI on the reviewed head; do not waive failures |
 | Git history review | MANUAL ACTION | 27 reachable commits, 472 file-change records, 458 text patches; 14 no-patch records are empty package initializers | Review email and removed planning history; unmerged refs are not exhaustively certified |
 
 ## History findings and boundaries
@@ -67,6 +67,12 @@ The surviving phase records are scientific evidence, not installation/status ent
 Canonical PDF SHA256: `013b80939ae32d46ba84a0321962bbc8632427aed1cdbdd0bd8f87c40b67009f` (1,340,809 bytes). Content is unchanged from the supplied report. No separate DOCX copy or unreviewed point-cloud render is added. The canonical report may contain its approved attributed figures; it does not bundle the dataset.
 
 The official [MaizeField3D dataset card](https://huggingface.co/datasets/BGLab/MaizeField3D) identifies CC BY-NC 4.0, separately from Apache-2.0 source code. The report index does not invent additional document licensing or ownership.
+
+## Verification record
+
+[GitHub Actions run 54](https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/actions/runs/41538392822), implementation commit `4a34354b190320c065c52e3f454446c0e3ec83d5`, passed on clean Ubuntu 24.04 / Python 3.11: **207 tests passed, 3 skipped**, with successful Open3D import and Ruff correctness checks. The geometry tests were neither removed nor xfailed. Existing optional-dependency/hardware skip contracts remain unchanged. CI uses the declared `dev,geometry,analysis` profile, not optional interoperability tools.
+
+Local notebook checks passed all four tests; five dependency profiles resolved, documented research CLI help commands passed, and 145 local documentation links resolved. Source/config and existing benchmark artifacts match the inspected main blobs. The local optional-interoperability full-suite attempt could not complete under the execution environment's telemetry/egress restriction; no local full-suite success is claimed. The successful clean Ubuntu run is the release gate evidence.
 
 ## Manual actions before changing visibility
 
