@@ -1,6 +1,6 @@
 # Agri3D
 
-[![Tests](https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/actions/workflows/tests.yml) [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](LICENSE)
+[![Tests](https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/actions/workflows/tests.yml/badge.svg?branch=main&event=push)](https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/actions/workflows/tests.yml) [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-blue)](LICENSE)
 
 **3D crop perception and structural phenotyping for field-grown maize point clouds.**
 
