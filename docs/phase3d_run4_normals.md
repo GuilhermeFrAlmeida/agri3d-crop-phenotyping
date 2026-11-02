@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 3D — Run 4: estimated surface normals
 
 > **Completed and rejected:** Run 4 validation mIoU 0.8173358; Run 1 remains the frozen semantic baseline. Commands below preserve the historical experiment protocol and do not authorize retraining during Phases 4/5.

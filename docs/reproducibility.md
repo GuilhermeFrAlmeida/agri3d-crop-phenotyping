@@ -2,6 +2,8 @@
 
 ## Environment
 
+Start with [getting started](getting_started.md) for dependency profiles, Ubuntu `libegl1`, notebooks and external checkpoint/manifest requirements. Canonical CI is Python 3.11 / Ubuntu 24.04; ≥3.10 is the declared minimum, not a fully tested version matrix.
+
 Use Python 3.10 or newer and install a PyTorch build appropriate for the target device before the project extras. On a CPU machine:
 
 ```bash
@@ -77,7 +79,7 @@ python scripts/analyze_pointnet2.py \
   --split val --output-dir "$ARTIFACT_DIR/pointnet2_run1/validation_analysis"
 ```
 
-These metrics concern 10,000 fixed sampled points per plant, not projected predictions over the full cloud. Test is inaccessible through the current CLIs.
+These metrics concern 10,000 fixed sampled points per plant, not projected predictions over the full cloud. The neural/downstream validation harnesses restrict evaluation to validation. Legacy baseline split options and standalone PLY entry points do not enforce membership for arbitrary files; the project policy still prohibits test evaluation.
 
 ## Historical Run 4 gate and commands
 
@@ -98,3 +100,22 @@ In Colab, clone the reviewed source branch, install package extras without repla
 No new training is required: supply Run 1 `best.pt` to `python -m agri3d.pipeline analyze`. The backend verifies checkpoint contracts; the manifest evaluation harness also checks its exact-byte manifest hash and accepts validation only. Use the exact manifest sample ID for epoch-0 sampling parity. Measurements use full cleaned metric geometry, never model-normalized coordinates.
 
 [Phases 4/5 commands and artifact contract](phases4_5_phenotyping_pipeline.md) include single-plant CPU inference, bounded five-plant validation and all-78 validation experiments. Oracle mode can run geometry without a model. Public code accepts externally stored checkpoint paths and never redistributes weights/data. Where Git metadata is unavailable, supply `--code-commit` with the reviewed full SHA. Optional ONNX attempts and qualification rules are in [model interoperability](model_interoperability.md); current export is NOT QUALIFIED.
+
+## Frozen downstream evaluation
+
+The default instance graph is 0.020 m / 32 neighbors, minimum 100 points and attachment radius 0.03 m. It was frozen before the completed val78 run: 156 successful plant/mode executions, zero failures. See [results](results.md) and [the current-stage report](reports/README.md). No metric is recomputed by this guide.
+
+```bash
+python scripts/evaluate_phenotyping_pipeline.py \
+  --manifest <MANIFEST> --root <DATA_ROOT> --checkpoint <CHECKPOINT> \
+  --config configs/phenotyping_pipeline.yaml --split val --mode both \
+  --device cpu --output-dir <OUTPUT_DIR>
+```
+
+Use a new output directory and the exact external artifacts. Val78 was evaluation, not tuning; a repetition cannot silently become parameter optimization. No test access is authorized. For single-plant artifact generation use [getting started](getting_started.md). Historical Phase 4A replay requires `configs/phenotyping_pipeline_phase4a_initial.yaml`, not current defaults.
+
+## CI and evidence provenance
+
+The public suite uses synthetic fixtures and synthetic notebook backends, no dataset/checkpoint download during tests, and no required GPU. Ubuntu CI installs `libegl1` before Open3D import. The canonical dependency groups are described in [getting started](getting_started.md). CI resolves supported packages rather than asserting a fully pinned numerical environment; experiment provenance records exact versions and contract hashes.
+
+The current-stage PDF and approved aggregate summary support the published val78 figures. The repository deliberately does not contain the original dataset, checkpoints, private manifest or raw val78 bundle. Scientific reproduction therefore requires obtaining the exact external inputs; passing synthetic tests alone does not reproduce model accuracy.

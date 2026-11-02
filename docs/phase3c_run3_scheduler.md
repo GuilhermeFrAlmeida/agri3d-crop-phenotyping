@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 3C — Run 3: validation-mIoU learning-rate scheduling
 
 ## Hypothesis and controlled comparison

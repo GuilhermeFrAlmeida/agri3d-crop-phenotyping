@@ -1,69 +1,77 @@
 # Public-release audit
 
-> **Historical audit snapshot (2026-10-21):** experiment-state statements below describe that release review. Current Run 4 completion and Phases 4/5 development are tracked in [results](results.md) and [the pipeline guide](phases4_5_phenotyping_pipeline.md).
+## Scope and decision
 
-**Audit basis:** latest `main` at `53af6848a460d60f24c91f07416b872140b1ac1c` (2026-10-21), GitHub API recursive tree and commit listing, all 19 commits in the main ancestry, current tracked-file inventory, source/docs pattern scans, Apache license file, and upstream MaizeField3D dataset card. Repository visibility remains private. This review does not rewrite history or change visibility.
+**Review date: 2026-11-02. Basis:** `main` at `3a50d684c944682b5f5c80054f3c034315824296` plus `chore/public-portfolio-hardening`. This audit is a scoped engineering review, not a guarantee that pattern scanning finds every possible secret.
 
-| Check | Status | Evidence / Notes | Action Required |
+**Release-candidate decision: READY WITH MANUAL ACTIONS, provided the branch's required CI check is green.** Repository visibility was verified as private at review time and is not changed here. No release, package, tag, model hosting, history rewrite or remote branch deletion is performed.
+
+## Safety and presentation checks
+
+| Check | Status | Evidence / notes | Action required |
 |---|---|---|---|
-| Secrets / credentials | PASS | Scanned current source/docs/notebook and commit diffs for common API-key/token/private-key/password patterns. No credential-like value found. | Re-run a dedicated secret scanner before changing visibility; rotate any credential discovered then. |
-| Personal paths / identifiers | FAIL | Current docs previously contained generic mounted-Drive paths. Commit author metadata across all 19 commits contains a personal Gmail address and author name. No home-directory path, account ID, or credential was found in tracked file content. | Decide whether to publish the existing author email. If it must be removed, rewrite affected Git history across branches before publicizing. Current docs use generic path placeholders. |
-| Corporate/proprietary references | PASS | No internal company, employer, proprietary system, or non-public infrastructure references found. Dataset and public project references are intentional attribution. | None identified. |
-| Large committed datasets | PASS | Current recursive tree is approximately 374 KB at repository level; no PLY, ZIP dataset archive, spreadsheet, or other dataset payload is tracked. | Keep external data outside the repository. |
-| Generated model artifacts | PASS | No `.pt`, `.pth`, checkpoint, prediction archive, or experiment output is tracked in the current tree. | Keep run artifacts and private manifests outside Git. |
-| Dataset redistribution risk | PASS | The segmented subset is external and absent from the tree. The upstream Hugging Face dataset card identifies CC BY-NC 4.0. The new docs distinguish dataset terms from the code license. | Users must obtain the dataset upstream and follow its current license/attribution. Do not redistribute it from this repository. |
-| License consistency | PASS | GitHub `main` contains the standard Apache License 2.0 text; README and licensing guide identify Apache-2.0 for code and CC BY-NC 4.0 for the dataset. The appendix copyright example is uncustomized. | A maintainer should review whether to add a verified copyright notice. Do not infer ownership from commit metadata. |
-| Stale experiment claims | FAIL | Tracked README/current guides now reflect Run 3 completed at epoch 99, Run 1 champion, Run 4 pending, and Phase 3P T4 measurements. The current GitHub repository description still describes individual-plant reconstruction and trait outputs as if implemented. | Update the repository description before public release to distinguish current semantic segmentation from planned reconstruction/trait work. |
-| Broken documentation links | PASS | All local Markdown links and referenced config/script paths were checked after edits; no broken local references remain. | Re-run link checks when adding/removing docs. External links depend on upstream availability. |
-| Reproducibility instructions | PASS | Public setup, manifest pinning, gate, train, validation, analysis, resume and runtime/scientific separation are documented with generic local-path placeholders. | Dataset revision and frozen manifest remain external inputs supplied by the experiment owner. |
-| Git history review | FAIL | GitHub API exposes 19 commits in main ancestry; all carry the same author identity and personal Gmail metadata. Historical documentation also includes Colab mounted-Drive paths in phase guides. Current tree has no secret or dataset artifact. | Review the affected commit range below. Do not make the repository public until personal metadata is consciously accepted or history is cleaned. |
+| Credentials / secrets | PASS, scoped | Current text and all available patches in the 27 commits reachable from main scanned for credential/private-key patterns; no matching credential values found | Re-scan if additional refs/content are introduced |
+| Private paths / infrastructure | PASS, current tree | Public guides/notebooks use placeholders, not account/Drive/host paths; no private infrastructure endpoint found | Sanitize future generated output provenance before sharing |
+| Personal identifiers | MANUAL ACTION | Intended public author/repository attribution remains; personal author email metadata exists in Git ancestry | Decide whether existing history exposure is acceptable; do not assume branch deletion removes it |
+| Corporate / proprietary references | PASS, scoped | No corporate source/data or proprietary infrastructure reference identified in reviewed project content | Review future imported files |
+| Raw datasets / private manifests | PASS | No raw MaizeField3D PLY/archive or research manifest committed; data stays external | Preserve ignore rules and external acquisition |
+| Models / experiment bundles | PASS | No `.pt`, `.pth`, `.onnx` or raw val78 bundle committed; existing synthetic benchmark JSON is explicitly labeled | Keep scientific artifacts external |
+| Large files | PASS | Only newly approved canonical PDF is about 1.34 MB; no new dataset/model binary | Review future binary additions |
+| Notebooks | PASS | Three curated wrappers, no outputs/attachments, synthetic execution checks and explicit external inputs | Never commit run outputs or checkpoint/data payloads |
+| Report metadata / contents | PASS, scoped | Supplied 23-page PDF retained byte-for-byte; public professional author attribution, no detected private paths/credentials, no PDF JavaScript or embedded dataset | Maintainer decides explicit report/figure reuse terms |
+| Dataset redistribution | PASS, boundary documented | No dataset bundled; report documents results and attributed figures, not raw data | Respect external CC BY-NC 4.0; code licensing does not relicense data |
+| License consistency | PASS, with ownership decision | Canonical Apache-2.0 LICENSE; package metadata includes its expression/file; appendix placeholder remains an example | Add a project-specific notice only with verified ownership; no separate report license invented |
+| Metric / stale-state review | PASS | Run 1–4 values preserved; approved val78 aggregates and report corroborate 156 executions / zero failures; current docs updated | Keep historical selection and later sampled/full-cloud evaluations distinct |
+| Local links / command references | PASS after validation | Referenced files/configs and current CLI interfaces checked; no removed-plan links remain | Check PR verification summary and CI before public release |
+| CI / installation | REQUIRED GATE | Missing Open3D EGL runtime addressed with `libegl1`, real import smoke and unchanged geometry tests; Python 3.11 / Ubuntu 24.04 canonical | Require green branch CI; do not waive known environment/test failures |
+| Git history review | MANUAL ACTION | 27 reachable commits, 472 file-change records, 458 text patches; 14 no-patch records are empty package initializers | Review email and removed planning history; unmerged refs are not exhaustively certified |
 
-## History findings and scope
+## History findings and boundaries
 
-The `main` ancestry examined contains 19 commits, from initial commit `64c0357eeac671c0b7e4b16797851075b0664f19` through merge commit `53af6848a460d60f24c91f07416b872140b1ac1c`. Every commit's author metadata exposes the account's personal name and a Gmail address. The address is intentionally not repeated in this public-facing audit file. GitHub API commit objects expose it directly.
+The main ancestry was enumerated through Git commit records, including merged histories down to `64c0357eeac671c0b7e4b16797851075b0664f19`. All nonempty changed-file records supplied text patches. Historical notebook changes were reviewed; no committed dataset/checkpoint archive was identified. No credential value is reproduced in this audit.
 
-Old versioned phase guides also included mounted Google Drive path examples (without an account ID or token). Current documentation replaces these with placeholders. The paths occurred in phase documentation during the Run 1–4 and Phase 3P commits, including `docs/phase3_pointnet2.md`, `docs/phase3a_validation_analysis.md`, `docs/phase3b_run2_augmentation.md`, `docs/phase3c_run3_scheduler.md`, `docs/phase3d_run4_normals.md`, and `docs/phase3p_training_performance.md`. No dataset or checkpoint bytes were found in those commits.
+Personal author email metadata occurs in the reviewed ancestry, including the current base commit. The address is deliberately not repeated here. Removing it from a current document would not remove commit metadata. Similarly, the removed planning documents remain reachable in older commits. **Deleting old branches does not remove commits already merged into main.**
 
-For clarity, the 20 main-ancestry commits reviewed were:
+No real secret was discovered, so no secret-driven history rewrite is proposed as an automatic action. If a future credential is found, first revoke/rotate it, identify every affected path/commit/ref, then plan a reviewed rewrite with a tool such as `git filter-repo`, coordinate collaborators, remove affected hosted refs/caches as applicable, and verify from a fresh clone. Do not silently force-push or treat tip deletion as eradication. Any privacy-driven rewrite of email/planning history is a separate maintainer decision.
 
-```text
-53af6848a460d60f24c91f07416b872140b1ac1c
-5ad4f94934bc325d2f595d3ec8356acd9f7a399b
-2c6f75cbd3e1b447afcb8bd5181224f48259539f
-6516934ded1cc6d509c0880b13efffa6ab6e47fe
-241411e5340cd9b362926962ad9a357a2c442dc3
-c6715a1ca30117e02cae5bbc938bf9bd8cd5fb73
-28d97d0cb17d924cf7ba45e0597139afd8f3b224
-a57793997d76dc29038b09a3a8fbd9470158a3c6
-9edaad5d894ff050bafc8835286cfd60f93087d6
-187075a20acaf980bbae259f0f84ca684643337b
-8c79522960bedcfb18fe53d07c7ef4fa8f9ce269
-05a7b49774f978d7e5694d5eb8aeb82c2c9c3790
-beeccbe387d57e254f17cbbb8fadb05406bc5c65
-f71bc784c23bc08caafb3757b9b250a124558290
-6b115080891205769e6533d202e7a5631709e72a
-10bb1ae61d5653841f8146b3bb389230781ab4cb
-779b5e8348e7e2603823cbd748dd90a95fcc1a73
-f954278d35e683070dcc1b18bcf2d4e666665abd
-64c0357eeac671c0b7e4b16797851075b0664f19
-```
+This review covers current main ancestry, not every unmerged remote branch, fork, hosting cache or future commit. The maintainer's separate branch-cleanup plan remains outside this task.
 
-The 19 commits were enumerated from the GitHub commit API. Branches corresponding to earlier phase work point at these same reviewed changes; no tags were present. The repository still has a private visibility setting. No visibility change, release, tag push, or history rewrite was performed.
+## Document classification
 
-## Recommended history-cleanup procedure
+No unnecessary path moves were made. The documentation index supplies navigation instead.
 
-If the author email or historical Drive paths should not become public, an authorized maintainer should:
+| Classification | Documents | Rationale |
+|---|---|---|
+| CURRENT PUBLIC DOCUMENT | Root README; `docs/README.md`, `getting_started.md`, `architecture.md`, `dataset.md` | Public entry points, installation and actual system contracts |
+| CURRENT PUBLIC DOCUMENT | `results.md`, `experiments.md`, `performance.md`, `reproducibility.md` | Current evaluation scopes, execution and measured evidence |
+| CURRENT PUBLIC DOCUMENT | `limitations.md`, `roadmap.md`, `dataset_and_licensing.md`, `model_interoperability.md` | Qualification boundaries, future work and rights/contracts |
+| CURRENT PUBLIC DOCUMENT | `phases4_5_phenotyping_pipeline.md`, this audit, `reports/README.md`, canonical report PDF | Current pipeline, release review and long-form presentation |
+| HISTORICAL TECHNICAL EVIDENCE | `phase2_audit.md`, `phase3_pointnet2.md`, `phase3a_validation_analysis.md` | Data/training/analysis protocols, labeled historical |
+| HISTORICAL TECHNICAL EVIDENCE | `phase3b_run2_augmentation.md`, `phase3c_run3_scheduler.md`, `phase3d_run4_normals.md` | Negative experiments and preserved controlled contracts |
+| HISTORICAL TECHNICAL EVIDENCE | `phase3p_training_performance.md`, `phase4a_instance_diagnostics.md`, `benchmarks/*.json` | Runtime evidence and decision-time freeze; old pending wording is historical |
+| REDUNDANT / INTERNAL — removed from current tree | `devlopment_plan.md`, `project_specification.md` | Internal planning/aspirational specification; relevant public directions are now in architecture/roadmap |
+| REDUNDANT — replaced | `notebooks/colab_data_pipeline.ipynb` | Three-cell setup stub superseded by curated runnable wrappers and getting-started guide; no scientific outputs discarded |
 
-1. Decide on an approved replacement identity/email (for example, a GitHub noreply address) and preserve attribution as intended.
-2. Clone the repository with all branches and tags, create an offline backup, and use `git filter-repo` with an explicit mailmap/callback to rewrite commit author/committer metadata and, if desired, historical documentation paths.
-3. Inspect rewritten commits, trees, and diffs; run secret and artifact scans again.
-4. Coordinate the force push of all affected branches and any pull-request refs with collaborators. Existing clones/forks may retain the old history.
-5. Check GitHub cached views and discuss cache removal with GitHub Support if the old metadata remains accessible.
+The surviving phase records are scientific evidence, not installation/status entry points. Current claims should be read from the report, results and roadmap.
 
-Do not rewrite history solely as part of documentation review. If any actual credential is later discovered, revoke/rotate it first, then follow the credential-provider's incident procedure in addition to history cleanup.
+## Result consistency
 
-## License and citation evidence
+- Historical Run 1 selection mIoU **0.836603**, epoch **76**; rejected alternatives **0.829574**, **0.831723**, **0.817336**.
+- Later val78 sampled mIoU **0.83662**, projected mIoU **0.83967**; **156** successful executions, **0** failures.
+- Structural means **15.94 / 17.92**, reported paired gap **+1.99**; predicted-greater/equal/lower counts **63 / 7 / 8**.
+- The slight historical-versus-later sampled metric difference is retained explicitly rather than silently reconciled. No unverified cause, statistical significance or improved generalization is inferred.
+- The report and approved aggregate summary are the public evidence source; raw validation bundles are intentionally external. No scientific evaluation is recomputed by this release preparation.
 
-- The repository's `LICENSE` blob at `main` is the standard Apache License 2.0 text; it is not modified in this documentation branch.
-- The [official MaizeField3D Hugging Face dataset card](https://huggingface.co/datasets/BGLab/MaizeField3D) states `CC-BY-NC-4.0` and describes the 520 segmented 100k PLY subset.
-- The associated article is [Kimara et al., Plant Phenomics 8(1), 100108 (2026)](https://doi.org/10.1016/j.plaphe.2025.100108). Repository citation metadata contains no DOI or publication claim.
+## Report integrity and licensing
+
+Canonical PDF SHA256: `013b80939ae32d46ba84a0321962bbc8632427aed1cdbdd0bd8f87c40b67009f` (1,340,809 bytes). Content is unchanged from the supplied report. No separate DOCX copy or unreviewed point-cloud render is added. The canonical report may contain its approved attributed figures; it does not bundle the dataset.
+
+The official [MaizeField3D dataset card](https://huggingface.co/datasets/BGLab/MaizeField3D) identifies CC BY-NC 4.0, separately from Apache-2.0 source code. The report index does not invent additional document licensing or ownership.
+
+## Manual actions before changing visibility
+
+1. Require the branch's test workflow to pass; inspect the required check rather than assuming a local run proves clean Ubuntu compatibility.
+2. Decide whether personal email and removed planning content in existing Git history are acceptable. No history rewrite is performed here.
+3. Decide/report the reuse terms for the technical report/figures and any verified project-specific copyright notice.
+4. Review unmerged refs and perform any desired remote branch cleanup separately; deletion is not ancestry removal.
+5. Optionally update repository description/topics, then explicitly change visibility when ready. No release/package publication is implied.

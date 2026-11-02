@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 3P — recovery, profiling, and Colab efficiency
 
 > **Phase record:** the early sections document recovery and profiling as implemented. Run 2 has since completed; later T4 observations and throughput measurements are recorded in the Phase 3P continuation below and summarized in [performance](performance.md).

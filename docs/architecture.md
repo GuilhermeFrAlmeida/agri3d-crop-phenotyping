@@ -1,6 +1,6 @@
 # Architecture
 
-Agri3D implements semantic training plus a model-neutral inference, full-cloud projection, geometric structure and metric-measurement pipeline. Downstream algorithms are implemented but not yet qualified on real plants. Run 1 is the frozen semantic backend; stronger network experiments are deferred.
+Agri3D implements semantic training plus a model-neutral inference, full-cloud projection, geometric structure and metric-measurement pipeline. The frozen downstream pipeline completed val78 engineering qualification with limitations (156 successful plant/mode executions, zero failures). Biological instance/trait accuracy remains unqualified. Run 1 is the semantic backend; stronger network comparisons remain planned.
 
 ## High-level system
 
@@ -75,4 +75,4 @@ flowchart TD
     E --> F[ArtifactWriter: JSON, arrays, scalar PLY, HTML]
 ```
 
-Only the backend adapter imports PointNet++ internals. The CLI composes it with downstream modules; the latter do not inspect the architecture. Clean metric coordinates and normalized 10k model coordinates remain separate. RGB is never a model feature. See [Phases 4/5](phases4_5_phenotyping_pipeline.md) and [interoperability](model_interoperability.md) for contract details and current unqualified status.
+Only the backend adapter imports PointNet++ internals. The CLI composes it with downstream modules; the latter do not inspect the architecture. Clean metric coordinates and normalized 10k model coordinates remain separate. RGB is never a model feature. See [Phases 4/5](phases4_5_phenotyping_pipeline.md) and [interoperability](model_interoperability.md) for contract details. Val78 engineering execution is qualified with limitations; biological phenotype accuracy and ONNX remain unqualified.

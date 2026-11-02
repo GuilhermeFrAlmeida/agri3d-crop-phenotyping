@@ -2,7 +2,7 @@
 
 **Phase 4A: COMPLETE. Instance configuration: FROZEN.**
 
-**Phase 4/5 overall: IMPLEMENTED — FULL VALIDATION PENDING. Next: VAL78.**
+> **Historical Phase 4A qualification record:** the configuration freeze below occurred before val78. Full val78 has since completed with 156 successful plant/mode executions and zero failures. Current engineering status is **QUALIFIED WITH LIMITATIONS**; see [results](results.md). Forward-looking wording below preserves the decision-time protocol.
 
 ## Objective
 
@@ -145,11 +145,11 @@ The choice combines lower near-threshold fragmentation, improved structural conn
 - **Decision: PROMOTE NEW CONFIG**
 - **Instance configuration: FROZEN**
 - **Readiness: READY FOR VAL78**
-- **Phase 4/5 overall: IMPLEMENTED — FULL VALIDATION PENDING**
+- **Decision-time Phase 4/5 status: IMPLEMENTED — FULL VALIDATION PENDING**
 
 Readiness means a fixed configuration for a descriptive full validation evaluation, not established biological leaf-instance or phenotype accuracy. The approved measured tables are sanitized; no review receipt, storage/account identifiers, manifests, checkpoint locations or dataset artifacts are published.
 
-## Next step
+## Historical next-step protocol
 
 **The 78-plant validation execution is an evaluation run, not a tuning run.**
 

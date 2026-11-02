@@ -4,7 +4,7 @@
 
 The repository includes the standard Apache License 2.0 text in [`LICENSE`](../LICENSE). This applies to the source-code repository subject to its terms. It does not grant rights to external datasets.
 
-The existing license file contains the canonical Apache-2.0 terms but leaves the appendix's example copyright notice uncustomized. No ownership notice is added here. A maintainer may review whether a verified copyright notice should be added before release.
+The license file contains the canonical Apache-2.0 terms. Its appendix's `Copyright [yyyy] [name of copyright owner]` is an illustrative template, not an actual project ownership statement. Package metadata declares Apache-2.0. No project-specific ownership notice is invented; a verified notice remains a maintainer decision.
 
 ## MaizeField3D dataset
 
@@ -23,3 +23,7 @@ The repository does not claim authorship of MaizeField3D. The upstream card also
 ## Repository citation
 
 [`CITATION.cff`](../CITATION.cff) contains only verified repository metadata and no DOI, institutional affiliation or publication claim.
+
+## Technical report
+
+The [current-stage report](reports/README.md) documents engineering results without bundling the dataset. No separate report license is asserted. Report/figure reuse rights should be decided explicitly by the maintainer; neither source-code licensing nor report inclusion relicenses MaizeField3D.
