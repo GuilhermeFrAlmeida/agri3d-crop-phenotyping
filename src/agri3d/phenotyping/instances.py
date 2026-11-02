@@ -59,11 +59,12 @@ class InstanceExtractor:
         stalk = np.flatnonzero(semantic_labels == 1)
         leaf_ids = np.flatnonzero(semantic_labels == 0)
         accepted, rejected, sizes = [], [], []
-        raw_components = 0
+        raw_components, graph_edges = 0, 0
         stalk_tree = cKDTree(xyz[stalk]) if len(stalk) else None
         if len(leaf_ids):
             graph = neighborhood_graph(xyz[leaf_ids], self.config.neighborhood_radius_m,
                                        self.config.max_neighbors)
+            graph_edges = int(graph.nnz // 2)
             raw_components, component = connected_components(graph, directed=False)
             # Label IDs follow the smallest cleaned source row; never rely on library order.
             groups = [leaf_ids[component == i] for i in range(raw_components)]
@@ -88,6 +89,7 @@ class InstanceExtractor:
         unassigned = np.sort(np.concatenate(rejected)) if rejected else np.array([], dtype=int)
         structure = PlantStructure(stalk, accepted, unassigned, {
             "method": self.config.method, "raw_components": int(raw_components),
+            "graph_undirected_edges": graph_edges,
             "accepted_leaf_instances": len(accepted), "rejected_small_components": len(rejected),
             "component_sizes": sizes, "unassigned_leaf_points": len(unassigned),
             "unassigned_fraction_of_leaf": len(unassigned) / len(leaf_ids) if len(leaf_ids) else 0.,

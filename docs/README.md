@@ -31,7 +31,8 @@
 
 ## Current Development
 
-- [Phases 4/5 pipeline](phases4_5_phenotyping_pipeline.md) — implemented inference/structure/trait baseline; real-data qualification pending.
+- [Phase 4A diagnostics](phase4a_instance_diagnostics.md) — completed CPU val5 connectivity sweep; artifact reuse, diagnostics and explicit review before val78.
+- [Phases 4/5 pipeline](phases4_5_phenotyping_pipeline.md) — inference/structure/trait implementation contracts; full validation and biological accuracy remain unqualified.
 - [Model interoperability](model_interoperability.md) — canonical PyTorch backend and explicit ONNX blocker/qualification protocol.
 - [Phase 3D: Run 4 normals](phase3d_run4_normals.md) — completed normal-feature comparison, rejected.
 - [Public-release audit](public_release_audit.md) — repository and history review with pre-publication action.
