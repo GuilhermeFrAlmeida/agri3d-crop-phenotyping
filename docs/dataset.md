@@ -41,3 +41,7 @@ The split manifest contains a test assignment, but current training/validation/a
 - **Experiment artifacts:** manifests, checkpoints, logs and predictions are local/user-managed outputs; they are not committed or distributed here.
 
 See [dataset and licensing](dataset_and_licensing.md) for attribution and reuse details. Do not commit the dataset, checkpoint files, or private manifests.
+
+## Completed validation scope
+
+The frozen downstream val78 evaluation is complete (156 successful plant/mode executions, zero failures). This is engineering/structural qualification, not verified biological instance or phenotype accuracy. [Results](results.md) distinguish historical 10k model selection from the later sampled/projected evaluation. The test split remains untouched, and the validation execution is not a tuning opportunity.

@@ -1,8 +1,8 @@
 # Phases 4/5 — frozen inference, structure and phenotype measurements
 
-**Status: IMPLEMENTED — FULL VALIDATION PENDING.** Phase 4A is complete. The bounded five-plant diagnostic selected **0.020 m / 32 neighbors**, now frozen in the production configuration before val78. See the [measured Phase 4A report](phase4a_instance_diagnostics.md). This qualifies a configuration for evaluation, not biological instance or phenotype accuracy. Run 1 remains the frozen semantic reference; test remains untouched.
+**Status: QUALIFIED WITH LIMITATIONS.** Full val78 engineering evaluation completed: 78 plants × two modes = 156 successful executions, zero failures. Phase 4A is complete. The bounded five-plant diagnostic selected **0.020 m / 32 neighbors**, frozen in the production configuration before the completed val78 evaluation. See the [measured Phase 4A report](phase4a_instance_diagnostics.md). This qualifies engineering execution and structural behavior on validation, not biological instance or phenotype accuracy. See [current results](results.md) and the [technical report](reports/README.md). Run 1 remains the frozen semantic reference; test remains untouched.
 
-**The 78-plant validation execution is an evaluation run, not a tuning run.** Report failures without retrospective parameter tuning against the same 78 plants. Any algorithmic revision must be a new experiment with an explicit development protocol. Advanced model work remains deferred.
+**The completed 78-plant validation execution was an evaluation run, not a tuning run.** Report failures without retrospective parameter tuning against the same 78 plants. Any algorithmic revision must be a new experiment with an explicit development protocol. Advanced model work remains deferred.
 
 ## Scientific state
 

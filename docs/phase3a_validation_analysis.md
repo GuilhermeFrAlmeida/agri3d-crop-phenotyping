@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 3A — PointNet++ validation error analysis
 
 > **Historical phase guide:** this document describes the validation-only analysis tooling. Its Run 1 reference metrics remain current; implementation-environment test counts are a phase snapshot.

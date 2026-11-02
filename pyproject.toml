@@ -1,9 +1,13 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "agri3d"
 version = "0.1.0"
+description = "3D crop perception and structural phenotyping for field-grown maize point clouds"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24", "plyfile>=1.0", "torch>=2.2", "scipy>=1.10", "PyYAML>=6.0"]
 [project.optional-dependencies]
@@ -18,3 +22,14 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[project.urls]
+Repository = "https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping"
+Documentation = "https://github.com/GuilhermeFrAlmeida/agri3d-crop-phenotyping/blob/main/docs/README.md"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+# Correctness gate; legacy formatting is outside this release-hardening change.
+select = ["E9", "F"]

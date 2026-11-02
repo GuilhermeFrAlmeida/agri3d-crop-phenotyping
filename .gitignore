@@ -12,3 +12,22 @@ artifacts/
 *.onnx
 *.onnx.data
 .ruff_cache/
+
+# External datasets, local execution state and notebook scratch
+/data/
+/checkpoints/
+/outputs/
+.cache/
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+venv/
+env/
+.env
+.env.*
+build/
+dist/
+*.pyc
+*.pyo
+.DS_Store
+.vscode/
+.idea/

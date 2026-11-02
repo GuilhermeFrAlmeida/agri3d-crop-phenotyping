@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 3 — XYZ-only PointNet++ semantic baseline
 
 > **Historical phase guide:** Run 1 remains the current reference, but Runs 2–4 have since been completed or started. See [results](results.md) and [experiments](experiments.md) for current status.

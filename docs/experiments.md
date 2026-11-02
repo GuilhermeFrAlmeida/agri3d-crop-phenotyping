@@ -14,7 +14,7 @@ The supervised experiments use MaizeField3D segmented 100k, a frozen plant-ident
 
 ## Interpretation
 
-The geometric baseline establishes a simple non-learned point of comparison. Run 1 is the current champion because it has the strongest validation mIoU and stalk IoU among the measured neural runs. Run 2 traded recall for precision without improving aggregate validation. Run 3 completed the scheduler intervention, but its best mIoU remained below Run 1. Run 4 returned to the Run 1 policy and tested only estimated normal features; its result was also below Run 1. Neural experimentation is now frozen while downstream Phases 4/5 are qualified.
+The geometric baseline establishes a simple non-learned point of comparison. Run 1 is the current champion because it has the strongest validation mIoU and stalk IoU among the measured neural runs. Run 2 traded recall for precision without improving aggregate validation. Run 3 completed the scheduler intervention, but its best mIoU remained below Run 1. Run 4 returned to the Run 1 policy and tested only estimated normal features; its result was also below Run 1. Run 1 remains frozen; downstream Phases 4/5 have completed val78 engineering qualification with limitations.
 
 Runs are single-seed controlled comparisons, not a statistical study. The validation set has already informed model selection and successive hypotheses, so these metrics are not an independent test estimate.
 
@@ -27,7 +27,7 @@ Runs are single-seed controlled comparisons, not a statistical study. The valida
 
 The separate [Phase 3P performance work](phase3p_training_performance.md) changes runtime instrumentation and optional data plumbing, not these scientific comparisons.
 
-## Phases 4/5 structural experiments (implemented; real results pending)
+## Phases 4/5 structural experiments (completed val78 execution)
 
 - A: compare sampled semantic metrics with nearest-projected full-cloud validation metrics.
 - B: compare oracle-semantic and predicted-semantic structures; use verified instance references only when explicitly supplied.
@@ -35,3 +35,5 @@ The separate [Phase 3P performance work](phase3p_training_performance.md) change
 - D: compare PCA extent with bounded graph-geodesic length proxies when defined.
 
 These experiments use the frozen Run 1 backend, no training and validation only. See [Phases 4/5](phases4_5_phenotyping_pipeline.md).
+
+The frozen 0.020 m / 32-neighbor configuration completed 156 plant/mode executions with zero failures. The [results](results.md) distinguish sampled/full-cloud semantic metrics, structural diagnostics and biological qualification limits. No tuning was performed on val78; no test was evaluated. The current-stage [technical report](reports/README.md) is the long-form evidence summary.

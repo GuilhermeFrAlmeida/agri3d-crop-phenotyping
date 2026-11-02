@@ -43,3 +43,7 @@ The baseline full training epoch observation of 136–140 seconds is in the same
 The profiler aggregates a continuous window and reports CPU/CUDA time, memory, operation families, PointNet++ stages and logical ranges for FPS, neighborhood query, interpolation, forward, backward, optimizer and host-to-device copies. The current repository also has bounded DataLoader/cache and disposable batch-size CLIs. Measurement synchronization and profiler overhead can change overlap; diagnostic percentages are not utilization figures.
 
 For exact commands, synthetic CPU references, cache caveats and report templates, see [Phase 3P training performance](phase3p_training_performance.md). AMP, TF32, custom CUDA kernels, third-party PointNet++ operations and larger official batch sizes are not enabled.
+
+## Downstream evaluation context
+
+The frozen pipeline has completed val78 engineering evaluation; see [results](results.md) and the [current-stage report](reports/README.md). The Phase 4A shared-environment CPU comparison is a configuration tradeoff, not an isolated production-latency benchmark. Training throughput figures above remain distinct from inference/structure/trait stage timing. No new performance experiment is performed by the public-release preparation.

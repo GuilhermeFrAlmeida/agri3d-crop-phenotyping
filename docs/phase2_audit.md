@@ -1,3 +1,5 @@
+> **Historical technical evidence:** this record preserves the phase protocol and measured results. Current project qualification and completed val78 results are in [results](results.md) and the [current-stage report](reports/README.md). Older pending statements describe their original phase, not current status.
+
 # Phase 2 audit and Phase 3 readiness
 
 > **Historical snapshot:** this file records the early data-foundation phase. Current implementation and experiment status are summarized in the root README and current documentation index.
